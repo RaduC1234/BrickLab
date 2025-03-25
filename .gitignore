@@ -1,0 +1,120 @@
+# =========================
+# General Git Stuff
+# =========================
+.DS_Store
+Thumbs.db
+*.log
+
+# =========================
+# Embedded C Projects
+# =========================
+*.o
+*.elf
+*.bin
+*.hex
+*.map
+*.out
+*.a
+*.d
+BrickBase/hardware/BrickBase-backups
+
+# Build system artifacts
+/build/
+/obj/
+/output/
+/*.dep
+/CMakeFiles/
+/CMakeCache.txt
+Makefile
+cmake_install.cmake
+
+# Tool-specific
+*.swp
+*.swo
+*.lst
+*.bak
+*.dSYM/
+*.su
+*.cproj
+*.uvproj*
+*.uvopt*
+*.project
+*.settings/
+*.launch
+
+# PlatformIO
+.pio/
+.vscode/
+*.pio*
+
+# =========================
+# React Projects
+# =========================
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+.vscode/
+*.tsbuildinfo
+
+# =========================
+# KiCad Projects
+# =========================
+*.bak
+*.bck
+*.kicad_prl
+*.tmp
+*~
+*.sch-bak
+*.pcb-bak
+__pycache__/
+fp-info-cache
+sym-lib-table-backup
+*.kicad_sch-bak
+*.kicad_pcb-bak
+
+# KiCad backup & autosave
+*.save
+*.autosave
+*.restore
+*.kicad_sch-bak
+*.kicad_pcb-bak
+
+# Intermediate/Generated files
+*.net
+*.xml
+*.csv
+*.json
+*.ibom.html
+*.pos
+*.step
+*.stp
+*.dxf
+*.gbr
+*.gbo
+*.gbs
+*.gbl
+*.gml
+*.gtl
+*.gto
+*.gts
+*.gtp
+*.txt
+*.zip
+*.svg
+*.pdf
+*.3dshapes/
+
+# =========================
+# Optional extras
+# =========================
+.idea/
+*.iml
+*.sublime-workspace
+*.sublime-project
