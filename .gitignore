@@ -90,7 +90,6 @@ sym-lib-table-backup
 *.net
 *.xml
 *.csv
-*.json
 *.ibom.html
 *.pos
 *.step
