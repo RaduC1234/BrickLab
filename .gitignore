@@ -107,7 +107,6 @@ sym-lib-table-backup
 *.txt
 *.zip
 *.svg
-*.pdf
 *.3dshapes/
 
 # =========================
