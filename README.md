@@ -49,6 +49,12 @@ BrickLab is a mobile educational platform that helps students **learn IoT device
 
 ---
 
+## 🪫Hardware
+
+
+
+---
+
 ## 🚀 Getting Started
 
 Coming soon — full documentation, setup instructions, and example projects!
