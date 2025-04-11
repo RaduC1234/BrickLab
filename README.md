@@ -15,15 +15,15 @@ BrickLab is a mobile educational platform that helps students **learn IoT device
 
 ---
 
-## 🛠 Project Structure
+## 🛠 Project Overall Structure
 
 ### 1. Software
 
-| Area                | Details |
-|---------------------|---------|
-| **Mobile App**       | Developed in **Android Studio** using **React Native** and **TypeScript**. The app features a friendly drag-and-drop interface for code block programming. |
-| **Hardware Programming** | Using **ESP-IDF** framework for programming **ESP32** modules, and **AVR 8-bit** microcontrollers for simple IoT projects. |
-| **Technologies**     | - Android Studio<br>- React Native<br>- TypeScript<br>- ESP-IDF<br>- AVR C Programming |
+| Area                | Details                                                                                                                                                                         |
+|---------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Mobile App**       | Developed in **Android Studio** using **React Native** and **TypeScript**. The app features a friendly drag-and-drop interface for code block programming.                      |
+| **Hardware Programming** | Using **ESP-IDF** framework for programming **ESP32** modules, and **AVR 8-bit** for Atiny85 microcontrollers on the modules.                                                   |
+| **Technologies**     | - Android Studio<br>- React Native<br>- TypeScript<br>- ESP-IDF Framework<br>- AVR C Programming<br>- I2C Protocol<br>- Bluetooth Low Energy - Generic Attribute Profile (Gatt) |
 
 ---
 
@@ -49,11 +49,22 @@ BrickLab is a mobile educational platform that helps students **learn IoT device
 
 ---
 
-## 🪫Hardware
+## 📁 Project Structure
 
+The project is divided into two primary subprojects:
 
+### 1. **BrickBase**
+This is the core of the system. It includes:
+- The software, built with PlatformIO
+- The hardware design, developed using KiCad
+- A Bluetooth server that handles:
+    - Code interpretation
+    - Module status monitoring
+    - Communication with the client
 
----
+### 2. **🖥️ Brick GUI**
+_(Description to be added)_
+
 
 ## 🚀 Getting Started
 
