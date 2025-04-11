@@ -4,64 +4,114 @@
 .DS_Store
 Thumbs.db
 *.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*~
 
 # =========================
-# Embedded C Projects
+# IDEs & Editors
 # =========================
+.vscode/
+.idea/
+*.iml
+*.sublime-workspace
+*.sublime-project
+*.ccls-cache/
+.clangd/
+compile_commands.json
+
+# =========================
+# Build System Artifacts
+# =========================
+/build/
+/dist/
+/output/
+/obj/
 *.o
+*.out
 *.elf
 *.bin
 *.hex
 *.map
-*.out
 *.a
 *.d
-BrickBase/hardware/BrickBase-backups
-
-# Build system artifacts
-/build/
-/obj/
-/output/
-/*.dep
-/CMakeFiles/
-/CMakeCache.txt
-Makefile
-cmake_install.cmake
-
-# Tool-specific
-*.swp
-*.swo
+*.dep
 *.lst
-*.bak
-*.dSYM/
 *.su
+*.old
+*.dSYM/
+*.tsbuildinfo
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# =========================
+# Embedded Projects (C/C++)
+# =========================
 *.cproj
 *.uvproj*
 *.uvopt*
 *.project
-*.settings/
 *.launch
+*.settings/
+BrickBase/hardware/BrickBase-backups
 
+# =========================
 # PlatformIO
+# =========================
 .pio/
-.vscode/
+.pioenvs/
+.piolibdeps/
 *.pio*
 
 # =========================
-# React Projects
+# Node.js / React / React Native / Expo
 # =========================
 node_modules/
-dist/
-build/
-.env
-.env.local
-.env.*.local
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 package-lock.json
-.vscode/
-*.tsbuildinfo
+yarn.lock
+
+.env
+.env.local
+.env.*.local
+
+# Expo specific
+.expo/
+.expo-shared/
+*.expo/
+.expoCache/
+.expoSettings.json
+.expo-source-map/
+
+# Metro bundler
+metro-cache/
+react-native/packager-info.json
+react-native/launchPackager.command
+
+# iOS (if you eject)
+ios/Pods/
+ios/build/
+*.xcworkspace
+*.xcuserstate
+*.xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+
+# Android (if you eject)
+android/.gradle/
+android/.idea/
+android/local.properties
+android/.cxx/
+android/app/build/
+android/build/
+
+# Keystores (React Native signing)
+*.keystore
 
 # =========================
 # KiCad Projects
@@ -69,24 +119,16 @@ package-lock.json
 *.bak
 *.bck
 *.kicad_prl
-*.tmp
-*~
-*.sch-bak
-*.pcb-bak
-__pycache__/
-fp-info-cache
-sym-lib-table-backup
 *.kicad_sch-bak
 *.kicad_pcb-bak
-
-# KiCad backup & autosave
+*.sch-bak
+*.pcb-bak
 *.save
 *.autosave
 *.restore
-*.kicad_sch-bak
-*.kicad_pcb-bak
-
-# Intermediate/Generated files
+fp-info-cache
+sym-lib-table-backup
+__pycache__/
 *.net
 *.xml
 *.csv
@@ -104,16 +146,12 @@ sym-lib-table-backup
 *.gto
 *.gts
 *.gtp
-*.txt
 *.zip
 *.svg
-*.pdf
 *.3dshapes/
 
 # =========================
-# Optional extras
+# CLion Specific
 # =========================
+cmake-build-*/
 .idea/
-*.iml
-*.sublime-workspace
-*.sublime-project
