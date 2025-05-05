@@ -158,4 +158,3 @@ cmake-build-*/
 .idea/
 _build
 cmake
-lib

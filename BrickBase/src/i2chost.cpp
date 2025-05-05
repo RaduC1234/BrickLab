@@ -80,7 +80,7 @@ void brick_task_i2c_scan_devices(void *pvParams) {
 }
 
 bool brick_i2c_send_device_command(const brick_device_t *device, const brick_command_t cmd) {
-    if (!device || !cmd) {
+    /*if (!device || !cmd) {
         ESP_LOGE("brick_i2c_send_device_command", "Null device or command pointer");
         return false;
     }
@@ -122,5 +122,6 @@ bool brick_i2c_send_device_command(const brick_device_t *device, const brick_com
         ESP_LOGE("brick_i2c_send_device_command", "Failed to send command 0x%02X to device at 0x%02X", cmd->command, device->i2c_address);
     }
 
-    return res == ESP_OK;
+    return res == ESP_OK;*/
+    return false;
 }

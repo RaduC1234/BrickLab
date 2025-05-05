@@ -7,7 +7,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 
-brick_device_t get_device_specs_from_uuid(const uint8_t *uuid_bytes) {
+brick_device_t brick_get_device_specs_from_uuid(const uint8_t *uuid_bytes) {
     brick_device_t device = {0};
 
     if (!uuid_bytes) return device;
@@ -56,10 +56,10 @@ const char *brick_device_type_str(brick_device_type_t type) {
     }
 }
 
-const char *brick_load_and_run(const char *program_source) {
+void brick_load_and_run(const char *program_source) {
 }
 
-brick_device_t *brick_get_host_modules(void) {
+void brick_get_host_modules(void) {
 }
 
 #ifdef __cplusplus
