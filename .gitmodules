@@ -1,0 +1,3 @@
+[submodule "BrickBase/lib/EspBleLibrary"]
+	path = BrickBase/lib/EspBleLibrary
+	url = https://github.com/DamianSuess/EspBleLibrary
