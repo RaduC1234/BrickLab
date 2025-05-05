@@ -1,0 +1,35 @@
+{
+  "name": "bricklab-extension",
+  "displayName": "BrickLab",
+  "description": "Extension for BrickLab IoT projects",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "activationEvents": [
+    "onCommand:bricklab.createProject",
+    "onCommand:bricklab.runLuaFile"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "bricklab.createProject",
+        "title": "BrickLab: Create New Project"
+      },
+      {
+        "command": "bricklab.runLuaFile",
+        "title": "BrickLab: Run Active Lua File"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.0",
+    "@types/node": "^14.0.0",
+    "@types/vscode": "^1.70.0"
+  }
+}
