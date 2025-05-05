@@ -31,7 +31,7 @@ uint8_t brick_uuid_get_i2c_address(const brick_uuid_t *uuid) {
     return 0x08 + raw % (0x78 - 0x08);
 }
 
-int brick_uuid_valid(const uint8_t *uuid) {
+bool brick_uuid_valid(const uint8_t *uuid) {
     return uuid && uuid[0] == 'B' && uuid[1] == 'L';
 }
 
@@ -42,7 +42,7 @@ void brick_print_uuid(const brick_uuid_t *uuid) {
     printf("\n");
 }
 
-const char * brick_device_type_str(brick_device_type_t type) {
+const char *brick_device_type_str(brick_device_type_t type) {
     switch (type) {
         case LED_SINGLE: return "LED_SINGLE";
         case LED_DOUBLE: return "LED_DOUBLE";
@@ -54,6 +54,12 @@ const char * brick_device_type_str(brick_device_type_t type) {
         case SENSOR_DISTANCE: return "SENSOR_DISTANCE";
         default: return "UNKNOWN";
     }
+}
+
+const char *brick_load_and_run(const char *program_source) {
+}
+
+brick_device_t *brick_get_host_modules(void) {
 }
 
 #ifdef __cplusplus

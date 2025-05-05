@@ -6,4 +6,3 @@ while true do
   led_off(19)
   delay(1000)
 end
-

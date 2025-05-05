@@ -2705,6 +2705,26 @@
 		)
 		(uuid "b2e7f340-9076-4d98-8d1c-e15020ccee3a")
 	)
+	(text "BrickBase"
+		(exclude_from_sim no)
+		(at 194.564 173.736 0)
+		(effects
+			(font
+				(size 3.81 3.81)
+			)
+		)
+		(uuid "bde5ecc6-d08e-4875-badb-81e3409e6b75")
+	)
+	(text "29-apr-2025"
+		(exclude_from_sim no)
+		(at 213.614 193.294 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+		(uuid "c3a0dbc7-4950-4c07-953e-01f28096a248")
+	)
 	(text "Connectors\n\n"
 		(exclude_from_sim no)
 		(at 54.864 19.05 0)

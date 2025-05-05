@@ -21,6 +21,7 @@ Thumbs.db
 *.ccls-cache/
 .clangd/
 compile_commands.json
+BrickModulePic
 
 # =========================
 # Build System Artifacts
@@ -155,3 +156,6 @@ __pycache__/
 # =========================
 cmake-build-*/
 .idea/
+_build
+cmake
+lib

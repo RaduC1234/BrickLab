@@ -1,58 +1,51 @@
-#ifndef BRICKLABS_API_HPP
-#define BRICKLABS_API_HPP
+#ifndef BRICKLABS_API_H
+#define BRICKLABS_API_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include <stdint.h>
+#include <stdbool.h>
 
-// I2C api
 //====================================================================================
-
-// Universal command
-#define CMD_IDENTIFY             0x00  // → returns UUID (16 bytes)
-
-// LED commands
-#define CMD_LED_ON               0x01
-#define CMD_LED_OFF              0x02
-#define CMD_LED_TOGGLE           0x03
-
-// Servo commands
-#define CMD_SERVO_SET_ANGLE      0x10  // +1 byte (0–180)
-
-// Sensor commands
-#define CMD_SENSOR_GET_CM        0x20  // ← returns 2 bytes (cm)
-
+// Command Types
+//====================================================================================
 /**
- * UUID Format (brick_uuid_t):
- * ┌────────┬────────────┬────────────────────────────────┐
- * │ Byte   │ Field      │ Description                    │
- * ├────────┼────────────┼────────────────────────────────┤
- * │ 0–1    │ prefix     │ Must be 'B', 'L' (0x42, 0x4C)  │
- * │ 2–3    │ type       │ Device type (big-endian)       │
- * │ 4–7    │ reserved   │ Reserved bytes (future use)    │
- * │ 8–15   │ unique_id  │ 8-byte device-specific ID      │
- * └────────┴────────────┴────────────────────────────────┘
+ * @brief Brick command types sent via I²C.
  */
-typedef struct __attribute__((packed)) {
-    uint8_t prefix[2]; // 'B', 'L'
-    uint8_t device_type[2]; // Big-endian: [hi, lo]
-    uint8_t reserved[4]; // Reserved
-    uint8_t unique_id[8]; // Unique ID (e.g., serial, random)
-} brick_uuid_raw_t;
+typedef enum {
+    // Universal command
+    CMD_IDENTIFY = 0x00, /**< Returns UUID (16 bytes) */
 
-typedef union {
-    brick_uuid_raw_t raw;
-    uint8_t bytes[16];
-} brick_uuid_t;
+    // LED commands
+    CMD_LED = 0x01, /**< Set single LED intensity */
+    CMD_LED_DOUBLE = 0x02, /**< Set dual LEDs */
+    CMD_LED_RGB = 0x03, /**< Set RGB LED */
 
+    // Servo commands
+    CMD_SERVO_SET_ANGLE = 0x10, /**< Set servo angle (-365 to 365 degrees) */
+    CMD_STEPPER_MOVE = 0x11, /**< Move stepper motor: direction + steps + microstepping */
+
+    // Sensor commands
+    CMD_SENSOR_GET_CM = 0x30 /**< Request distance sensor measurement (2 bytes, cm) */
+} brick_command_type_t;
+
+//====================================================================================
+// Device Types
+//====================================================================================
+/**
+ * @brief Base groups for device types.
+ */
 typedef enum {
     BRICK_TYPE_LED_BASE = 0x1000,
     BRICK_TYPE_MOTOR_BASE = 0x2000,
     BRICK_TYPE_SENSOR_BASE = 0x3000
 } brick_device_type_group_t;
 
+/**
+ * @brief Specific device types.
+ */
 typedef enum {
     // LEDs
     LED_SINGLE = BRICK_TYPE_LED_BASE + 0x00,
@@ -69,7 +62,37 @@ typedef enum {
     SENSOR_DISTANCE = BRICK_TYPE_SENSOR_BASE + 0x01
 } brick_device_type_t;
 
-// led section
+//====================================================================================
+// UUID Types
+//====================================================================================
+/**
+ * @brief UUID structure layout (raw bytes).
+ *
+ * Format:
+ * ┌────────┬────────────┬────────────────────────────────┐
+ * │ Byte   │ Field      │ Description                    │
+ * ├────────┼────────────┼────────────────────────────────┤
+ * │ 0–1    │ prefix     │ Must be 'B', 'L' (0x42, 0x4C)  │
+ * │ 2–3    │ type       │ Device type (big-endian)       │
+ * │ 4–7    │ reserved   │ Reserved for future use        │
+ * │ 8–15   │ unique_id  │ 8-byte unique device identifier│
+ * └────────┴────────────┴────────────────────────────────┘
+ */
+typedef struct __attribute__((packed)) {
+    uint8_t prefix[2]; /**< 'B', 'L' */
+    uint8_t device_type[2]; /**< Device type (big-endian) */
+    uint8_t reserved[4]; /**< Reserved bytes */
+    uint8_t unique_id[8]; /**< Unique ID */
+} brick_uuid_raw_t;
+
+/**
+ * @brief UUID representation as raw bytes or structured format.
+ */
+typedef union {
+    brick_uuid_raw_t raw; /**< Structured format */
+    uint8_t bytes[16]; /**< Raw bytes */
+} brick_uuid_t;
+
 typedef struct {
     int is_on;
 } brick_device_led_single_impl_t;
@@ -92,43 +115,93 @@ typedef union {
     brick_device_led_rgb_impl_t led_rgb;
 } brick_device_impl_t;
 
+//====================================================================================
+// Device APIs
+//====================================================================================
+/**
+ * @brief Describes a Brick device on the I²C bus.
+ */
 typedef struct {
-    brick_uuid_t uuid;
-    brick_device_type_t device_type;
-    uint8_t i2c_address;
+    brick_uuid_t uuid; /**< Device UUID */
+    brick_device_type_t device_type; /**< Type of the device */
+    uint8_t i2c_address; /**< I²C address */
     brick_device_impl_t impl;
-    uint8_t online; // 1 = online, 0 = offline (maintained by master)
+    uint8_t online; /**< 1 = online, 0 = offline (tracked by master) */
 } brick_device_t;
 
+typedef brick_device_t *brick_device;
 
 /**
- * Parses a 16-byte UUID and returns the corresponding device struct.
- * Does not populate i2c_address.
+ * @brief Brick command structure.
  */
-brick_device_t get_device_specs_from_uuid(const uint8_t *uuid);
+typedef struct {
+    brick_command_type_t command; /**< Command type */
+    brick_device_t *device;
+} brick_command_t;
+
+//====================================================================================
+// Public API Functions
+//====================================================================================
+/**
+ * @brief Parses a 16-byte UUID and returns the corresponding device specification.
+ *
+ * @param uuid Pointer to the 16-byte UUID.
+ * @return Device structure with type and other information.
+ */
+brick_device_t brick_get_device_specs_from_uuid(const uint8_t *uuid);
 
 /**
-* Derives I²C address from the first byte of unique_id.
-* Ensures address is in safe I²C range: 0x08 - 0x77.
-* @note the i2c uuid is always the first byte from the unique serial number
-*/
+ * @brief Derives an I²C address from a UUID's first unique_id byte.
+ *
+ * Ensures the result is inside a safe I²C address range (0x08 - 0x77).
+ *
+ * @param uuid Pointer to UUID structure.
+ * @return I²C address derived from UUID.
+ */
 uint8_t brick_uuid_get_i2c_address(const brick_uuid_t *uuid);
 
-int brick_uuid_valid(const uint8_t *uuid);
+/**
+ * @brief Validates the UUID prefix.
+ *
+ * @param uuid Pointer to UUID (16 bytes).
+ * @return true if UUID is valid, false otherwise.
+ */
+bool brick_uuid_valid(const uint8_t *uuid);
 
+/**
+ * @brief Prints a UUID to standard output.
+ *
+ * @param uuid Pointer to UUID structure.
+ */
 void brick_print_uuid(const brick_uuid_t *uuid);
 
+/**
+ * @brief Returns a human-readable C-string for a device type.
+ *
+ * @param type Device type enum.
+ * @return Constant C-string name of device type.
+ */
 const char *brick_device_type_str(brick_device_type_t type);
 
-// bluetooth api
 //====================================================================================
+// Bluetooth API
+//====================================================================================
+/**
+ * @brief Loads and runs a program from a source string.
+ *
+ * @param program_source Pointer to program source code.
+ */
+const char *brick_load_and_run(const char *program_source);
 
-void load_and_run(const char *programSource);
-
-brick_device_t *get_host_modules();
+/**
+ * @brief Returns a pointer to the host module list.
+ *
+ * @return Pointer to array of brick_device_t structures.
+ */
+brick_device_t *brick_get_host_modules(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // BRICKLABS_API_HPP
+#endif // BRICKLABS_API_H

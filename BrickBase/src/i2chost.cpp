@@ -1,12 +1,13 @@
 #include "i2chost.hpp"
 
-brick_device_t i2c_devices[MAX_DEVICES];
-SemaphoreHandle_t i2c_devices_mutex;
+std::map<brick_uuid_t, brick_device_t, uuid_less> device_map;
+std::mutex device_map_mutex;
+
+bool uuid_less::operator()(const brick_uuid_t &a, const brick_uuid_t &b) const {
+    return std::memcmp(a.bytes, b.bytes, 16) < 0;
+}
 
 void brick_i2c_init() {
-    i2c_devices_mutex = xSemaphoreCreateMutex();
-    assert(i2c_devices_mutex != nullptr);
-
     i2c_config_t conf = {};
     conf.mode = I2C_MODE_MASTER;
     conf.sda_io_num = I2C_MASTER_SDA_IO;
@@ -29,15 +30,14 @@ void brick_i2c_scan_devices() {
         i2c_cmd_link_delete(cmd);
 
         if (ack != ESP_OK) {
-            I2C_DEVICES_MUTEX_START
-            for (auto & i2c_device : i2c_devices) {
-                if (i2c_device.online && i2c_device.i2c_address == addr) {
-                    i2c_device.online = 0;
+            std::lock_guard<std::mutex> lock(device_map_mutex);
+            for (auto &[uuid, device]: device_map) {
+                if (device.online && device.i2c_address == addr) {
+                    device.online = 0;
                     ESP_LOGW("brick_i2c_scan_devices", "Device at 0x%02X removed", addr);
                     break;
                 }
             }
-            I2C_DEVICES_MUTEX_END
             continue;
         }
 
@@ -49,30 +49,22 @@ void brick_i2c_scan_devices() {
         );
 
         if (res == ESP_OK && brick_uuid_valid(uuid_buf)) {
-            bool already_known = false;
-            I2C_DEVICES_MUTEX_START
-            for (auto & i2c_device : i2c_devices) {
-                if (i2c_device.online && memcmp(i2c_device.uuid.bytes, uuid_buf, 16) == 0) {
-                    i2c_device.online = 1;
-                    already_known = true;
-                    break;
-                }
-            }
+            brick_uuid_t uuid;
+            std::memcpy(uuid.bytes, uuid_buf, 16);
+            std::lock_guard<std::mutex> lock(device_map_mutex);
+            auto it = device_map.find(uuid);
 
-            if (!already_known) {
-                for (auto & i2c_device : i2c_devices) {
-                    if (!i2c_device.online) {
-                        brick_device_t new_dev = get_device_specs_from_uuid(uuid_buf);
-                        new_dev.i2c_address = addr;
-                        new_dev.online = 1;
-                        i2c_device = new_dev;
-                        ESP_LOGI("brick_i2c_scan_devices", "Device found at 0x%02X (%s)", addr, brick_device_type_str(new_dev.device_type));
-                        brick_print_uuid(&new_dev.uuid);
-                        break;
-                    }
-                }
+            if (it != device_map.end()) {
+                it->second.online = 1;
+            } else {
+                brick_device_t new_dev = brick_get_device_specs_from_uuid(uuid_buf);
+                new_dev.i2c_address = addr;
+                new_dev.online = 1;
+                device_map[uuid] = new_dev;
+
+                ESP_LOGI("brick_i2c_scan_devices", "Device found at 0x%02X (%s)", addr, brick_device_type_str(new_dev.device_type));
+                brick_print_uuid(&new_dev.uuid);
             }
-            I2C_DEVICES_MUTEX_END
         } else {
             ESP_LOGW("brick_i2c_scan_devices", "Failed to read UUID from 0x%02X", addr);
         }
@@ -80,9 +72,55 @@ void brick_i2c_scan_devices() {
 }
 
 void brick_task_i2c_scan_devices(void *pvParams) {
-    ESP_LOGI("brick_task_i2c_scan_devices", "I²C initialized on SDA=GPIO%d, SCL=GPIO%d", I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO);
+    ESP_LOGI("brick_task_i2c_scan_devices", "I\302\262C initialized on SDA=GPIO%d, SCL=GPIO%d", I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO);
     while (true) {
         brick_i2c_scan_devices();
         vTaskDelay(pdMS_TO_TICKS(3000));
     }
+}
+
+bool brick_i2c_send_device_command(const brick_device_t *device, const brick_command_t cmd) {
+    if (!device || !cmd) {
+        ESP_LOGE("brick_i2c_send_device_command", "Null device or command pointer");
+        return false;
+    }
+
+    i2c_cmd_handle_t cmd_handle = i2c_cmd_link_create();
+    i2c_master_start(cmd_handle);
+    i2c_master_write_byte(cmd_handle, (device->i2c_address << 1) | I2C_MASTER_WRITE, true);
+    i2c_master_write_byte(cmd_handle, static_cast<uint8_t>(cmd->command), true);
+
+    // Handle payload based on command type
+    if (cmd->impl) {
+        switch (cmd->command) {
+            case CMD_LED:
+                i2c_master_write(cmd_handle, reinterpret_cast<const uint8_t *>(&cmd.device->impl.led_single), sizeof(uint8_t), true);
+                break;
+
+            case CMD_LED_DOUBLE:
+                i2c_master_write(cmd_handle, reinterpret_cast<uint8_t *>(&cmd.device->impl.led_double), sizeof(uint8_t) * 2, true);
+                break;
+
+            case CMD_LED_RGB:
+                i2c_master_write(cmd_handle, reinterpret_cast<uint8_t *>(&cmd.device->impl.led_rgb), sizeof(uint8_t) * 3, true);
+                break;
+
+            case CMD_SERVO_SET_ANGLE:
+                //i2c_master_write(cmd_handle, reinterpret_cast<const uint8_t *>(&cmd.device->impl), sizeof(int16_t), true);
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    i2c_master_stop(cmd_handle);
+    esp_err_t res = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd_handle, pdMS_TO_TICKS(I2C_TIMEOUT_MS));
+    i2c_cmd_link_delete(cmd_handle);
+
+    if (res != ESP_OK) {
+        ESP_LOGE("brick_i2c_send_device_command", "Failed to send command 0x%02X to device at 0x%02X", cmd->command, device->i2c_address);
+    }
+
+    return res == ESP_OK;
 }

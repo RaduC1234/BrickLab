@@ -4,10 +4,12 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <freertos/semphr.h>
-#include <driver/i2c.h>
 #include <esp_log.h>
-#include <string.h>
+#include <driver/i2c.h>
+
+#include <cstring>
+#include <map>
+#include <mutex>
 
 #include "brickapi.h"
 
@@ -19,14 +21,17 @@
 
 #define MAX_DEVICES 16
 
-extern brick_device_t i2c_devices[MAX_DEVICES];
-extern SemaphoreHandle_t i2c_devices_mutex;
+struct uuid_less {
+    bool operator()(const brick_uuid_t& a, const brick_uuid_t& b) const;
+};
 
-#define I2C_DEVICES_MUTEX_START  do { if (xSemaphoreTake(i2c_devices_mutex, portMAX_DELAY)) {
-#define I2C_DEVICES_MUTEX_END    xSemaphoreGive(i2c_devices_mutex); } } while (0);
+extern std::map<brick_uuid_t, brick_device_t, uuid_less> device_map;
+extern std::mutex device_map_mutex;
 
 void brick_i2c_init();
 void brick_i2c_scan_devices();
 void brick_task_i2c_scan_devices(void *pvParams);
+
+bool brick_i2c_send_device_command(const brick_device_t *device, const brick_command_t *cmd);
 
 #endif // I2CHOST_HPP
