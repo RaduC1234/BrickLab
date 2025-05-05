@@ -158,3 +158,12 @@ cmake-build-*/
 .idea/
 _build
 cmake
+lib
+
+# =========================
+# BrickExtension
+# =========================
+BrickExtension/node_modules/
+BrickExtension/out/
+BrickExtension/.vscode/
+BrickExtension/*.vsix
