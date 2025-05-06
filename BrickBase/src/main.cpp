@@ -11,6 +11,9 @@
 #include "BLEUtils.h"
 #include "BLE2902.h"
 
+// lua
+#include "lua/lua.h"
+
 // sys
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>

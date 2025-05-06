@@ -2,10 +2,10 @@
 #ifndef I2CHOST_HPP
 #define I2CHOST_HPP
 
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
 #include <esp_log.h>
 #include <driver/i2c.h>
+#include <freertos/FreeRTOS.h> // Do NOT remove os headers
+#include <freertos/task.h>
 
 #include <cstring>
 #include <map>

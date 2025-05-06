@@ -94,18 +94,18 @@ typedef union {
 } brick_uuid_t;
 
 typedef struct {
-    int is_on;
+    uint8_t is_on;
 } brick_device_led_single_impl_t;
 
 typedef struct {
-    int is_on_1;
-    int is_on_2;
+    uint8_t is_on_1;
+    uint8_t is_on_2;
 } brick_device_led_double_impl_t;
 
 typedef struct {
-    int is_on_r;
-    int is_on_g;
-    int is_on_b;
+    uint8_t is_on_r;
+    uint8_t is_on_g;
+    uint8_t is_on_b;
 } brick_device_led_rgb_impl_t;
 
 // register here all the devices

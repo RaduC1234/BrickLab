@@ -51,7 +51,7 @@ void brick_i2c_scan_devices() {
         if (res == ESP_OK && brick_uuid_valid(uuid_buf)) {
             brick_uuid_t uuid;
             std::memcpy(uuid.bytes, uuid_buf, 16);
-            std::lock_guard<std::mutex> lock(device_map_mutex);
+            std::lock_guard lock(device_map_mutex);
             auto it = device_map.find(uuid);
 
             if (it != device_map.end()) {
