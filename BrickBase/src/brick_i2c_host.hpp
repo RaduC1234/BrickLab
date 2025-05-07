@@ -11,7 +11,7 @@
 #include <map>
 #include <mutex>
 
-#include "brickapi.h"
+#include "brick_i2c_api.h"
 
 #define I2C_MASTER_NUM         I2C_NUM_0
 #define I2C_MASTER_SDA_IO      GPIO_NUM_16
@@ -32,6 +32,9 @@ void brick_i2c_init();
 void brick_i2c_scan_devices();
 void brick_task_i2c_scan_devices(void *pvParams);
 
-bool brick_i2c_send_device_command(const brick_device_t *device, const brick_command_t *cmd);
+brick_device_t * brick_i2c_get_device_uuid(const char* uuid);
+brick_device_t* brick_i2c_get_device_uuid(brick_uuid_t uuid);
+
+bool brick_i2c_send_device_command(const brick_command_t *command);
 
 #endif // I2CHOST_HPP

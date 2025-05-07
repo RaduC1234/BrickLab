@@ -1,4 +1,4 @@
-#include "i2chost.hpp"
+#include "brick_i2c_host.hpp"
 
 std::map<brick_uuid_t, brick_device_t, uuid_less> device_map;
 std::mutex device_map_mutex;
@@ -79,39 +79,116 @@ void brick_task_i2c_scan_devices(void *pvParams) {
     }
 }
 
-bool brick_i2c_send_device_command(const brick_device_t *device, const brick_command_t cmd) {
-    /*if (!device || !cmd) {
+brick_device_t *brick_i2c_get_device_uuid(const char *uuid_str) {
+    if (!uuid_str || std::strlen(uuid_str) != 36) return nullptr;
+
+    brick_uuid_t uuid;
+    int byte_index = 0;
+
+    for (int i = 0; i < 36 && byte_index < 16;) {
+        if (uuid_str[i] == '-') {
+            ++i; // skip dash
+            continue;
+        }
+
+        auto hex_char_to_int = [](char c) -> int {
+            if ('0' <= c && c <= '9') return c - '0';
+            if ('a' <= c && c <= 'f') return c - 'a' + 10;
+            if ('A' <= c && c <= 'F') return c - 'A' + 10;
+            return -1;
+        };
+
+        int high = hex_char_to_int(uuid_str[i]);
+        int low = hex_char_to_int(uuid_str[i + 1]);
+        if (high < 0 || low < 0) return nullptr;
+
+        uuid.bytes[byte_index++] = static_cast<uint8_t>((high << 4) | low);
+        i += 2;
+    }
+
+    if (byte_index != 16) return nullptr;
+
+    std::lock_guard<std::mutex> lock(device_map_mutex);
+    for (auto &x: device_map) {
+        if (std::memcmp(x.second.uuid.bytes, uuid.bytes, sizeof(uuid.bytes)) == 0) {
+            return &x.second;
+        }
+    }
+
+    return nullptr;
+}
+
+brick_device_t *brick_i2c_get_device_uuid(brick_uuid_t uuid) {
+    std::lock_guard<std::mutex> lock(device_map_mutex);
+
+    for (auto &x: device_map) {
+        if (std::memcmp(x.second.uuid.bytes, uuid.bytes, sizeof(uuid.bytes)) == 0) {
+            return &x.second;
+        }
+    }
+
+    return nullptr;
+}
+
+
+bool brick_i2c_send_device_command(const brick_command_t *cmd) {
+    if (!cmd || !cmd->device) {
         ESP_LOGE("brick_i2c_send_device_command", "Null device or command pointer");
         return false;
     }
 
+    brick_device_t *device = cmd->device;
     i2c_cmd_handle_t cmd_handle = i2c_cmd_link_create();
     i2c_master_start(cmd_handle);
     i2c_master_write_byte(cmd_handle, (device->i2c_address << 1) | I2C_MASTER_WRITE, true);
     i2c_master_write_byte(cmd_handle, static_cast<uint8_t>(cmd->command), true);
 
-    // Handle payload based on command type
-    if (cmd->impl) {
-        switch (cmd->command) {
-            case CMD_LED:
-                i2c_master_write(cmd_handle, reinterpret_cast<const uint8_t *>(&cmd.device->impl.led_single), sizeof(uint8_t), true);
-                break;
+    // Optional payload based on command type
+    switch (cmd->command) {
+        case CMD_LED:
+            i2c_master_write(cmd_handle,
+                             reinterpret_cast<const uint8_t *>(&device->impl.led_single),
+                             sizeof(device->impl.led_single),
+                             true
+            );
+            break;
 
-            case CMD_LED_DOUBLE:
-                i2c_master_write(cmd_handle, reinterpret_cast<uint8_t *>(&cmd.device->impl.led_double), sizeof(uint8_t) * 2, true);
-                break;
+        case CMD_LED_DOUBLE:
+            i2c_master_write(cmd_handle,
+                             reinterpret_cast<const uint8_t *>(&device->impl.led_double),
+                             sizeof(device->impl.led_double),
+                             true
+            );
+            break;
 
-            case CMD_LED_RGB:
-                i2c_master_write(cmd_handle, reinterpret_cast<uint8_t *>(&cmd.device->impl.led_rgb), sizeof(uint8_t) * 3, true);
-                break;
+        case CMD_LED_RGB:
+            i2c_master_write(cmd_handle,
+                             reinterpret_cast<const uint8_t *>(&device->impl.led_rgb),
+                             sizeof(device->impl.led_rgb),
+                             true
+            );
+            break;
 
-            case CMD_SERVO_SET_ANGLE:
-                //i2c_master_write(cmd_handle, reinterpret_cast<const uint8_t *>(&cmd.device->impl), sizeof(int16_t), true);
-                break;
+        case CMD_SERVO_SET_ANGLE:
+            // Assuming servo angle is passed as int16_t in impl (you may need to define this)
+            i2c_master_write(cmd_handle,
+                             reinterpret_cast<const uint8_t *>(&device->impl),
+                             sizeof(int16_t),
+                             true
+            );
+            break;
 
-            default:
-                break;
-        }
+        case CMD_STEPPER_MOVE:
+            // Add support if there's a struct for stepper move
+            break;
+
+        case CMD_SENSOR_GET_CM:
+            // Usually read command, not write — might not need payload
+            break;
+
+        default:
+            ESP_LOGW("brick_i2c_send_device_command", "Unhandled command type: 0x%02X", cmd->command);
+            break;
     }
 
     i2c_master_stop(cmd_handle);
@@ -119,9 +196,9 @@ bool brick_i2c_send_device_command(const brick_device_t *device, const brick_com
     i2c_cmd_link_delete(cmd_handle);
 
     if (res != ESP_OK) {
-        ESP_LOGE("brick_i2c_send_device_command", "Failed to send command 0x%02X to device at 0x%02X", cmd->command, device->i2c_address);
+        ESP_LOGE("brick_i2c_send_device_command", "Failed to send command 0x%02X to device at 0x%02X",
+                 cmd->command, device->i2c_address);
     }
 
-    return res == ESP_OK;*/
-    return false;
+    return res == ESP_OK;
 }

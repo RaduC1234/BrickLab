@@ -1,75 +1,82 @@
-// std
-#include <cstdio>
-#include <cstring>
-
-// i2c
-#include "i2chost.hpp"
-
-// ble
-#include "BLEDevice.h"
-#include "BLEServer.h"
-#include "BLEUtils.h"
-#include "BLE2902.h"
-
-// lua
-#include "lua/lua.h"
-
-// sys
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
-#include <esp_log.h>
 
-BLEServer *server = nullptr;
-BLECharacteristic *characteristic = nullptr;
-bool device_connected = false;
+#include "brick_i2c_host.hpp"
+#include "brick_lua_vm.hpp"
 
-#define SERVICE_UUID "323e12af-6bb4-48cf-813d-3f7f8aa9f72f"
-#define CHARACTERISTIC_UUID "5f44ed80-420a-4684-914c-af625af2b856"
 
-class BrickBleServerCallbacks : public BLEServerCallbacks {
-    void onConnect(BLEServer *pServer) override {
-        device_connected = true;
+static void brick_task_rgb_cycle(void *pvParams) {
+    const TickType_t delay = pdMS_TO_TICKS(500);
+
+    while (true) {
+        brick_device_t *dev = brick_i2c_get_device_uuid("424C1010-0000-0000-87CB-CF832BF0EFAD");
+
+        if (dev && dev->device_type == LED_RGB) {
+            brick_command_t cmd = {
+                .command = CMD_LED_RGB,
+                .device = dev
+            };
+
+            dev->impl.led_rgb.red = 255;
+            dev->impl.led_rgb.blue = 255;
+            dev->impl.led_rgb.green = 255;
+            brick_i2c_send_device_command(&cmd);
+            vTaskDelay(delay);
+
+            dev->impl.led_rgb.red = 255;
+            dev->impl.led_rgb.blue = 255;
+            dev->impl.led_rgb.green = 0;
+            brick_i2c_send_device_command(&cmd);
+            vTaskDelay(delay);
+
+            dev->impl.led_rgb.red = 0;
+            dev->impl.led_rgb.blue = 255;
+            dev->impl.led_rgb.green = 0;
+            brick_i2c_send_device_command(&cmd);
+            vTaskDelay(delay);
+
+            dev->impl.led_rgb.red = 0;
+            dev->impl.led_rgb.blue = 0;
+            dev->impl.led_rgb.green = 255;
+            brick_i2c_send_device_command(&cmd);
+            vTaskDelay(delay);
+
+            dev->impl.led_rgb.red = 255;
+            dev->impl.led_rgb.blue = 0;
+            dev->impl.led_rgb.green = 255;
+            brick_i2c_send_device_command(&cmd);
+            vTaskDelay(delay);
+
+            dev->impl.led_rgb.red = 0;
+            dev->impl.led_rgb.blue = 0;
+            dev->impl.led_rgb.green = 0;
+            brick_i2c_send_device_command(&cmd);
+            vTaskDelay(delay);
+        } else {
+            vTaskDelay(pdMS_TO_TICKS(1000));
+        }
     }
+}
 
-    void onDisconnect(BLEServer *pServer) override {
-        device_connected = false;
-    }
-};
 
-extern "C" void app_main() {
-
-    // create i2c scan runtime
+extern "C" void app_main(void) {
     brick_i2c_init();
-    xTaskCreatePinnedToCore(
-        brick_task_i2c_scan_devices,
-        "brick_task_i2c_scan_devices",
-        2048,
-        nullptr,
-        1,
-        nullptr,
-        tskNO_AFFINITY
+
+    xTaskCreatePinnedToCore(brick_task_i2c_scan_devices,
+                            "scan_devices",
+                            4096,
+                            nullptr,
+                            5,
+                            nullptr,
+                            tskNO_AFFINITY
     );
 
-    //create bluetooth runtime
-    /*BLEDevice::init("BrickBase");
-
-    server = BLEDevice::createServer();
-    server->setCallbacks(new BrickBleServerCallbacks());
-
-    BLEService *service = server->createService(SERVICE_UUID);
-
-    characteristic = service->createCharacteristic(
-        CHARACTERISTIC_UUID,
-        BLECharacteristic::PROPERTY_READ |
-        BLECharacteristic::PROPERTY_WRITE |
-        BLECharacteristic::PROPERTY_NOTIFY |
-        BLECharacteristic::PROPERTY_INDICATE
+    xTaskCreatePinnedToCore(brick_task_rgb_cycle,
+                            "rgb_cycle",
+                            4096,
+                            nullptr,
+                            5,
+                            nullptr,
+                            tskNO_AFFINITY
     );
-
-    characteristic->addDescriptor(new BLE2902());
-
-    service->start();*/
-
-
-    //create lua runtime
 }

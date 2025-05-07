@@ -1,4 +1,4 @@
-#include "brickapi.h"
+#include "brick_i2c_api.h"
 
 #ifdef __cplusplus
 extern "C" {

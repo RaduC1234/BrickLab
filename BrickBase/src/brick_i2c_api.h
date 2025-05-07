@@ -103,9 +103,9 @@ typedef struct {
 } brick_device_led_double_impl_t;
 
 typedef struct {
-    uint8_t is_on_r;
-    uint8_t is_on_g;
-    uint8_t is_on_b;
+    uint8_t red;
+    uint8_t blue;
+    uint8_t green;
 } brick_device_led_rgb_impl_t;
 
 // register here all the devices
@@ -128,8 +128,6 @@ typedef struct {
     brick_device_impl_t impl;
     uint8_t online; /**< 1 = online, 0 = offline (tracked by master) */
 } brick_device_t;
-
-typedef brick_device_t *brick_device;
 
 /**
  * @brief Brick command structure.
