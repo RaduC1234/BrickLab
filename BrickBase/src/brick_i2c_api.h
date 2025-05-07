@@ -13,6 +13,7 @@ extern "C" {
 //====================================================================================
 /**
  * @brief Brick command types sent via I²C.
+ * @attention YOU NEED TO MAP THIS ENUM TO LUA ENVIROMENT
  */
 typedef enum {
     // Universal command

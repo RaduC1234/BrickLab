@@ -72,7 +72,9 @@ void brick_i2c_scan_devices() {
 }
 
 void brick_task_i2c_scan_devices(void *pvParams) {
-    ESP_LOGI("brick_task_i2c_scan_devices", "I\302\262C initialized on SDA=GPIO%d, SCL=GPIO%d", I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO);
+    ESP_LOGI("brick_task_i2c_scan_devices", "I\302\262C initialized on SDA=GPIO%d, SCL=GPIO%d", I2C_MASTER_SDA_IO, I2C_MASTER_SCL_IO);\
+    brick_i2c_init();
+
     while (true) {
         brick_i2c_scan_devices();
         vTaskDelay(pdMS_TO_TICKS(3000));

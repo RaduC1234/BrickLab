@@ -10,11 +10,17 @@ extern "C" {
 
 extern lua_State *lua_state;
 
+extern const char *brick_lab_lua_module; // defined in cmake
+
 // exposed functions
-void brick_lua_vm_delay(uint32_t milisec);
+int brick_lua_vm_delay(lua_State *vm_state);
+int brick_lua_vm_send_command(lua_State *vm_state);
+int brick_lua_vm_get_device_uuid(lua_State *vm_state);
 
 // internal functions
 void brick_lua_vm_init();
+void brick_lua_vm_reset();
+
 const char* brick_lua_vm_run(const char* code);
 
 #endif //LUAENV_HPP

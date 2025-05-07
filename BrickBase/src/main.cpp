@@ -4,63 +4,8 @@
 #include "brick_i2c_host.hpp"
 #include "brick_lua_vm.hpp"
 
-
-static void brick_task_rgb_cycle(void *pvParams) {
-    const TickType_t delay = pdMS_TO_TICKS(500);
-
-    while (true) {
-        brick_device_t *dev = brick_i2c_get_device_uuid("424C1010-0000-0000-87CB-CF832BF0EFAD");
-
-        if (dev && dev->device_type == LED_RGB) {
-            brick_command_t cmd = {
-                .command = CMD_LED_RGB,
-                .device = dev
-            };
-
-            dev->impl.led_rgb.red = 255;
-            dev->impl.led_rgb.blue = 255;
-            dev->impl.led_rgb.green = 255;
-            brick_i2c_send_device_command(&cmd);
-            vTaskDelay(delay);
-
-            dev->impl.led_rgb.red = 255;
-            dev->impl.led_rgb.blue = 255;
-            dev->impl.led_rgb.green = 0;
-            brick_i2c_send_device_command(&cmd);
-            vTaskDelay(delay);
-
-            dev->impl.led_rgb.red = 0;
-            dev->impl.led_rgb.blue = 255;
-            dev->impl.led_rgb.green = 0;
-            brick_i2c_send_device_command(&cmd);
-            vTaskDelay(delay);
-
-            dev->impl.led_rgb.red = 0;
-            dev->impl.led_rgb.blue = 0;
-            dev->impl.led_rgb.green = 255;
-            brick_i2c_send_device_command(&cmd);
-            vTaskDelay(delay);
-
-            dev->impl.led_rgb.red = 255;
-            dev->impl.led_rgb.blue = 0;
-            dev->impl.led_rgb.green = 255;
-            brick_i2c_send_device_command(&cmd);
-            vTaskDelay(delay);
-
-            dev->impl.led_rgb.red = 0;
-            dev->impl.led_rgb.blue = 0;
-            dev->impl.led_rgb.green = 0;
-            brick_i2c_send_device_command(&cmd);
-            vTaskDelay(delay);
-        } else {
-            vTaskDelay(pdMS_TO_TICKS(1000));
-        }
-    }
-}
-
-
 extern "C" void app_main(void) {
-    brick_i2c_init();
+
 
     xTaskCreatePinnedToCore(brick_task_i2c_scan_devices,
                             "scan_devices",
@@ -71,12 +16,30 @@ extern "C" void app_main(void) {
                             tskNO_AFFINITY
     );
 
-    xTaskCreatePinnedToCore(brick_task_rgb_cycle,
-                            "rgb_cycle",
-                            4096,
-                            nullptr,
-                            5,
-                            nullptr,
-                            tskNO_AFFINITY
-    );
+
+    printf(brick_lua_vm_run(R"lua(
+local uuid = "424C1010-0000-0000-87CB-CF832BF0EFAD"
+local delay_ms = 500
+
+local colors = {
+  { red = 255, green = 255, blue = 255 },
+  { red = 255, green = 0,   blue = 255 },
+  { red = 0,   green = 0,   blue = 255 },
+  { red = 0,   green = 255, blue = 0   },
+  { red = 255, green = 255, blue = 0   },
+  { red = 0,   green = 0,   blue = 0   }
+}
+
+while true do
+  local dev = brick.get_device_from_uuid(uuid)
+  if dev then
+    for _, color in ipairs(colors) do
+      brick.send_command(uuid, brick.CMD_LED_RGB, color)
+      delay(delay_ms)
+    end
+  else
+    delay(1000)
+  end
+end
+)lua"));
 }
