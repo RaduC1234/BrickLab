@@ -5,6 +5,7 @@
 #include <freertos/FreeRTOS.h>
 
 lua_State *vm_state = nullptr;
+std::function<const char*()> on_vm_exception_callback = nullptr;
 
 int brick_lua_vm_delay(lua_State *L) {
     int ms = luaL_checkinteger(L, 1);
@@ -85,16 +86,29 @@ int brick_lua_vm_get_device_uuid(lua_State *vm_state) {
     brick_device_t **ud = static_cast<brick_device_t **>(lua_newuserdata(vm_state, sizeof(brick_device_t *)));
     *ud = dev;
 
-    // Set metatable for the object
+    // set metatable for the object
     luaL_getmetatable(vm_state, "BrickDevice");
     lua_setmetatable(vm_state, -2);
 
     return 1;
 }
 
+int brick_device_index(lua_State *vm_state) {
+    auto **ud = static_cast<brick_device_t **>(luaL_checkudata(vm_state, 1, "BrickDevice"));
+    const char *key = luaL_checkstring(vm_state, 2);
+
+    if (strcmp(key, "device_type") == 0) {
+        lua_pushinteger(vm_state, (*ud)->device_type);
+        return 1;
+    }
+
+    lua_pushnil(vm_state);
+    return 1;
+}
+
 void brick_lua_vm_init() {
     vm_state = luaL_newstate();
-    luaL_openlibs(vm_state);  // Load standard Lua libraries
+    luaL_openlibs(vm_state); // Load standard Lua libraries
 
     // --- Register global C functions (into _G) ---
     static constexpr luaL_Reg global_funcs[] = {
@@ -111,30 +125,50 @@ void brick_lua_vm_init() {
         {"send_command", brick_lua_vm_send_command},
         {nullptr, nullptr}
     };
-    luaL_newlib(vm_state, brick_funcs);
+    luaL_newlib(vm_state, brick_funcs); // stack: [brick table]
 
     // Add constants to 'brick'
-    lua_pushinteger(vm_state, CMD_IDENTIFY);        lua_setfield(vm_state, -2, "CMD_IDENTIFY");
-    lua_pushinteger(vm_state, CMD_LED);             lua_setfield(vm_state, -2, "CMD_LED");
-    lua_pushinteger(vm_state, CMD_LED_DOUBLE);      lua_setfield(vm_state, -2, "CMD_LED_DOUBLE");
-    lua_pushinteger(vm_state, CMD_LED_RGB);         lua_setfield(vm_state, -2, "CMD_LED_RGB");
-    lua_pushinteger(vm_state, CMD_SERVO_SET_ANGLE); lua_setfield(vm_state, -2, "CMD_SERVO_SET_ANGLE");
-    lua_pushinteger(vm_state, CMD_STEPPER_MOVE);    lua_setfield(vm_state, -2, "CMD_STEPPER_MOVE");
-    lua_pushinteger(vm_state, CMD_SENSOR_GET_CM);   lua_setfield(vm_state, -2, "CMD_SENSOR_GET_CM");
+    lua_pushinteger(vm_state, CMD_IDENTIFY);
+    lua_setfield(vm_state, -2, "CMD_IDENTIFY");
+    lua_pushinteger(vm_state, CMD_LED);
+    lua_setfield(vm_state, -2, "CMD_LED");
+    lua_pushinteger(vm_state, CMD_LED_DOUBLE);
+    lua_setfield(vm_state, -2, "CMD_LED_DOUBLE");
+    lua_pushinteger(vm_state, CMD_LED_RGB);
+    lua_setfield(vm_state, -2, "CMD_LED_RGB");
+    lua_pushinteger(vm_state, CMD_SERVO_SET_ANGLE);
+    lua_setfield(vm_state, -2, "CMD_SERVO_SET_ANGLE");
+    lua_pushinteger(vm_state, CMD_STEPPER_MOVE);
+    lua_setfield(vm_state, -2, "CMD_STEPPER_MOVE");
+    lua_pushinteger(vm_state, CMD_SENSOR_GET_CM);
+    lua_setfield(vm_state, -2, "CMD_SENSOR_GET_CM");
 
-    lua_setglobal(vm_state, "brick");  // _G["brick"] = brick table
+    // === Device types ===
+    lua_pushinteger(vm_state, LED_RGB);
+    lua_setfield(vm_state, -2, "DEVICE_LED_RGB");
+    lua_pushinteger(vm_state, LED_SINGLE);
+    lua_setfield(vm_state, -2, "DEVICE_LED_SINGLE");
+
+    // Finalize 'brick' global table
+    lua_setglobal(vm_state, "brick"); // _G["brick"] = brick table
+
+    // --- Set BrickDevice metatable ---
+    luaL_newmetatable(vm_state, "BrickDevice");
+    lua_pushcfunction(vm_state, brick_device_index);
+    lua_setfield(vm_state, -2, "__index");
+    lua_pop(vm_state, 1); // pop metatable
 
     // --- Preload embedded Lua module as 'brick_lab' ---
     lua_getglobal(vm_state, "package");
     lua_getfield(vm_state, -1, "preload");
 
     lua_pushcfunction(vm_state, [](lua_State *L) -> int {
-        luaL_dostring(L, brick_lab_lua_module);  // Execute embedded Lua string
-        return 1;  // Return value will become module result
-    });
+                      luaL_dostring(L, brick_lab_lua_module); // Execute embedded Lua string
+                      return 1; // Return value becomes module result for `require`
+                      });
 
-    lua_setfield(vm_state, -2, "brick_lab");  // package.preload["brick_lab"] = loader
-    lua_pop(vm_state, 2);  // pop preload and package
+    lua_setfield(vm_state, -2, "brick_lab"); // package.preload["brick_lab"] = loader
+    lua_pop(vm_state, 2); // pop preload and package
 }
 
 void brick_lua_vm_reset() {
@@ -146,7 +180,6 @@ void brick_lua_vm_reset() {
 }
 
 const char *brick_lua_vm_run(const char *code) {
-
     brick_lua_vm_reset();
     assert(vm_state && "Lua VM not initialized");
 

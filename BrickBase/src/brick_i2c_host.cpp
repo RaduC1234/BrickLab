@@ -198,8 +198,7 @@ bool brick_i2c_send_device_command(const brick_command_t *cmd) {
     i2c_cmd_link_delete(cmd_handle);
 
     if (res != ESP_OK) {
-        ESP_LOGE("brick_i2c_send_device_command", "Failed to send command 0x%02X to device at 0x%02X",
-                 cmd->command, device->i2c_address);
+        ESP_LOGE("brick_i2c_send_device_command", "Failed to send command 0x%02X to device at 0x%02X", cmd->command, device->i2c_address);
     }
 
     return res == ESP_OK;
