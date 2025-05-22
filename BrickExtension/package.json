@@ -6,7 +6,9 @@
   "engines": {
     "vscode": "^1.70.0"
   },
-  "categories": ["Other"],
+  "categories": [
+    "Other"
+  ],
   "activationEvents": [
     "onCommand:bricklab.createProject",
     "onCommand:bricklab.runLuaFile",
@@ -21,7 +23,7 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-      "viewsContainers": {
+    "viewsContainers": {
       "activitybar": [
         {
           "id": "bricklab-sidebar",
@@ -39,7 +41,6 @@
         }
       ]
     },
-
     "commands": [
       {
         "command": "bricklab.createProject",
@@ -62,7 +63,7 @@
         "icon": "$(debug-console)"
       },
       {
-        "command": "bricklab.disconnect", 
+        "command": "bricklab.disconnect",
         "title": "BrickLab: Disconnect Device",
         "icon": "$(debug-disconnect)"
       },
@@ -100,10 +101,16 @@
           "group": "navigation"
         },
         {
+          "when": "!bricklab.connected",
           "command": "bricklab.connect",
           "group": "navigation"
         },
         {
+          "command": "bricklab.createProject",
+          "group": "navigation"
+        },
+        {
+          "when": "bricklab.connected",
           "command": "bricklab.disconnect",
           "group": "navigation"
         },
