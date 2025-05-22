@@ -21,6 +21,25 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+      "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "bricklab-sidebar",
+          "title": "BrickLab",
+          "icon": "resources/BrickLab.png"
+        }
+      ]
+    },
+    "views": {
+      "bricklab-sidebar": [
+        {
+          "type": "webview",
+          "id": "bricklab.devices",
+          "name": "Connected Devices"
+        }
+      ]
+    },
+
     "commands": [
       {
         "command": "bricklab.createProject",
@@ -78,6 +97,18 @@
         {
           "when": "resourceExtname == .lua",
           "command": "bricklab.runLuaFile",
+          "group": "navigation"
+        },
+        {
+          "command": "bricklab.connect",
+          "group": "navigation"
+        },
+        {
+          "command": "bricklab.disconnect",
+          "group": "navigation"
+        },
+        {
+          "command": "bricklab.getDevices",
           "group": "navigation"
         }
       ],

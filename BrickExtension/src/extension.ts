@@ -6,8 +6,10 @@ import * as path from 'path';
 import { validateLuaCode, getLuaCodeInfo } from './luaStringConverter'; // Updated import
 import { bleService, formatUuid } from './bleService';
 import { getDeviceTypeName, formatUuidForDisplay } from './brickBleApi';
+import { DeviceSidebarPanel } from './panels/DeviceSidebarPanel';
 
 export function activate(context: vscode.ExtensionContext) {
+    DeviceSidebarPanel.register(context);
     console.log('BrickLab extension is now active!');
 
     // Create new project command
@@ -130,21 +132,24 @@ export function activate(context: vscode.ExtensionContext) {
             }
 
             vscode.window.showInformationMessage('Connecting to BrickLab device...');
-            
+
             const connected = await bleService.connect(); // Will auto-scan if no address
-            
+
             if (connected) {
                 vscode.window.showInformationMessage('✓ Connected to BrickLab ESP32!');
-                
-                // Optionally get device list after connecting
+
                 try {
                     const devices = await bleService.refreshDeviceList();
                     const deviceCount = devices.length;
                     const onlineCount = devices.filter(d => d.online).length;
-                    
+
                     vscode.window.showInformationMessage(
                         `Found ${deviceCount} devices (${onlineCount} online)`
                     );
+
+                    // 👇 Refresh sidebar after device list is loaded
+                    DeviceSidebarPanel.refresh();
+
                 } catch (error) {
                     console.error('Failed to get device list:', error);
                 }
@@ -155,6 +160,7 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showErrorMessage(`Connection error: ${error}`);
         }
     });
+
 
     // Disconnect from device
     let disconnectCmd = vscode.commands.registerCommand('bricklab.disconnect', async () => {
