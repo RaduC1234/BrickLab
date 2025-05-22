@@ -172,10 +172,9 @@ bool brick_i2c_send_device_command(const brick_command_t *cmd) {
             break;
 
         case CMD_SERVO_SET_ANGLE:
-            // Assuming servo angle is passed as int16_t in impl (you may need to define this)
             i2c_master_write(cmd_handle,
-                             reinterpret_cast<const uint8_t *>(&device->impl),
-                             sizeof(int16_t),
+                             reinterpret_cast<const uint8_t *>(&device->impl.servo_180),
+                             sizeof(device->impl.servo_180),
                              true
             );
             break;

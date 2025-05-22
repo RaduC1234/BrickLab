@@ -28,13 +28,13 @@ extern "C" {
  * @note Must be mapped to the Lua environment manually if needed.
  */
 typedef enum {
-    CMD_IDENTIFY         = 0x00, /**< Request UUID (16 bytes) */
-    CMD_LED              = 0x01, /**< Set single LED intensity */
-    CMD_LED_DOUBLE       = 0x02, /**< Set dual LED intensities */
-    CMD_LED_RGB          = 0x03, /**< Set RGB LED values */
-    CMD_SERVO_SET_ANGLE  = 0x10, /**< Set angle for servo motor (-365 to 365 degrees) */
-    CMD_STEPPER_MOVE     = 0x11, /**< Move stepper motor: direction + steps + microstepping */
-    CMD_SENSOR_GET_CM    = 0x30  /**< Request distance sensor measurement in centimeters */
+    CMD_IDENTIFY = 0x00, /**< Request UUID (16 bytes) */
+    CMD_LED = 0x01, /**< Set single LED intensity */
+    CMD_LED_DOUBLE = 0x02, /**< Set dual LED intensities */
+    CMD_LED_RGB = 0x03, /**< Set RGB LED values */
+    CMD_SERVO_SET_ANGLE = 0x10, /**< Set angle for servo motor (-365 to 365 degrees) */
+    CMD_STEPPER_MOVE = 0x11, /**< Move stepper motor: direction + steps + microstepping */
+    CMD_SENSOR_GET_CM = 0x30 /**< Request distance sensor measurement in centimeters */
 } brick_command_type_t;
 
 //====================================================================================
@@ -46,9 +46,9 @@ typedef enum {
  * @brief Top-level categories for organizing devices.
  */
 typedef enum {
-    BRICK_TYPE_LED_BASE    = 0x1000, /**< LED device category */
-    BRICK_TYPE_MOTOR_BASE  = 0x2000, /**< Motor device category */
-    BRICK_TYPE_SENSOR_BASE = 0x3000  /**< Sensor device category */
+    BRICK_TYPE_LED_BASE = 0x1000, /**< LED device category */
+    BRICK_TYPE_MOTOR_BASE = 0x2000, /**< Motor device category */
+    BRICK_TYPE_SENSOR_BASE = 0x3000 /**< Sensor device category */
 } brick_device_type_group_t;
 
 /**
@@ -56,15 +56,15 @@ typedef enum {
  * @brief Specific types of devices recognized by the Brick system.
  */
 typedef enum {
-    LED_SINGLE      = BRICK_TYPE_LED_BASE    + 0x00,
-    LED_DOUBLE      = BRICK_TYPE_LED_BASE    + 0x01,
-    LED_RGB         = BRICK_TYPE_LED_BASE    + 0x10,
+    LED_SINGLE = BRICK_TYPE_LED_BASE + 0x00,
+    LED_DOUBLE = BRICK_TYPE_LED_BASE + 0x01,
+    LED_RGB = BRICK_TYPE_LED_BASE + 0x10,
 
-    MOTOR_SERVO_180 = BRICK_TYPE_MOTOR_BASE  + 0x00,
-    MOTOR_SERVO_360 = BRICK_TYPE_MOTOR_BASE  + 0x01,
-    MOTOR_STEPPER   = BRICK_TYPE_MOTOR_BASE  + 0x02,
+    MOTOR_SERVO_180 = BRICK_TYPE_MOTOR_BASE + 0x00,
+    MOTOR_SERVO_360 = BRICK_TYPE_MOTOR_BASE + 0x01,
+    MOTOR_STEPPER = BRICK_TYPE_MOTOR_BASE + 0x02,
 
-    SENSOR_COLOR    = BRICK_TYPE_SENSOR_BASE + 0x00,
+    SENSOR_COLOR = BRICK_TYPE_SENSOR_BASE + 0x00,
     SENSOR_DISTANCE = BRICK_TYPE_SENSOR_BASE + 0x01
 } brick_device_type_t;
 
@@ -77,10 +77,10 @@ typedef enum {
  * @brief Human-readable UUID structure containing device type, reserved bytes, and unique ID.
  */
 typedef struct __attribute__((packed)) {
-    uint8_t prefix[2];        /**< Prefix bytes: must be 'B', 'L' */
-    uint8_t device_type[2];   /**< Big-endian encoded device type */
-    uint8_t reserved[4];      /**< Reserved for future expansion */
-    uint8_t unique_id[8];     /**< Unique 64-bit identifier */
+    uint8_t prefix[2]; /**< Prefix bytes: must be 'B', 'L' */
+    uint8_t device_type[2]; /**< Big-endian encoded device type */
+    uint8_t reserved[4]; /**< Reserved for future expansion */
+    uint8_t unique_id[8]; /**< Unique 64-bit identifier */
 } brick_uuid_raw_t;
 
 /**
@@ -88,8 +88,8 @@ typedef struct __attribute__((packed)) {
  * @brief Wrapper for UUIDs allowing access as raw bytes or structured fields.
  */
 typedef union {
-    brick_uuid_raw_t raw;     /**< Structured access to UUID fields */
-    uint8_t bytes[16];        /**< Raw 16-byte UUID */
+    brick_uuid_raw_t raw; /**< Structured access to UUID fields */
+    uint8_t bytes[16]; /**< Raw 16-byte UUID */
 } brick_uuid_t;
 
 //====================================================================================
@@ -120,6 +120,10 @@ typedef struct {
     uint8_t green;
 } brick_device_led_rgb_impl_t;
 
+typedef struct {
+    uint8_t angle;
+} brick_device_servo_180_impl_t;
+
 /**
  * @union brick_device_impl_t
  * @brief Contains device-specific implementation data.
@@ -127,7 +131,8 @@ typedef struct {
 typedef union {
     brick_device_led_single_impl_t led_single;
     brick_device_led_double_impl_t led_double;
-    brick_device_led_rgb_impl_t    led_rgb;
+    brick_device_led_rgb_impl_t led_rgb;
+    brick_device_servo_180_impl_t servo_180;
 } brick_device_impl_t;
 
 //====================================================================================
@@ -139,11 +144,11 @@ typedef union {
  * @brief Representation of a discovered device on the I²C bus.
  */
 typedef struct {
-    brick_uuid_t uuid;              /**< Unique device UUID */
+    brick_uuid_t uuid; /**< Unique device UUID */
     brick_device_type_t device_type; /**< Device type */
-    uint8_t i2c_address;            /**< 7-bit I²C address */
-    brick_device_impl_t impl;       /**< Device-specific data/state */
-    uint8_t online;                 /**< 1 = online, 0 = offline */
+    uint8_t i2c_address; /**< 7-bit I²C address */
+    brick_device_impl_t impl; /**< Device-specific data/state */
+    uint8_t online; /**< 1 = online, 0 = offline */
 } brick_device_t;
 
 /**
@@ -152,7 +157,7 @@ typedef struct {
  */
 typedef struct {
     brick_command_type_t command; /**< Command enum */
-    brick_device_t *device;       /**< Target device */
+    brick_device_t *device; /**< Target device */
 } brick_command_t;
 
 //====================================================================================
