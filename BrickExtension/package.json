@@ -6,9 +6,7 @@
   "engines": {
     "vscode": "^1.70.0"
   },
-  "categories": [
-    "Other"
-  ],
+  "categories": ["Other"],
   "activationEvents": [
     "onCommand:bricklab.createProject",
     "onCommand:bricklab.runLuaFile",
@@ -23,7 +21,7 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "viewsContainers": {
+      "viewsContainers": {
       "activitybar": [
         {
           "id": "bricklab-sidebar",
@@ -38,9 +36,15 @@
           "type": "webview",
           "id": "bricklab.devices",
           "name": "Connected Devices"
+        },
+        {
+          "type": "webview",
+          "id": "bricklab.tutorial",
+          "name": "Tutorial"
         }
       ]
     },
+
     "commands": [
       {
         "command": "bricklab.createProject",
@@ -63,7 +67,7 @@
         "icon": "$(debug-console)"
       },
       {
-        "command": "bricklab.disconnect",
+        "command": "bricklab.disconnect", 
         "title": "BrickLab: Disconnect Device",
         "icon": "$(debug-disconnect)"
       },
@@ -91,33 +95,40 @@
         "command": "bricklab.manualDeviceTest",
         "title": "BrickLab: Manual Device Test",
         "icon": "$(settings-gear)"
+      },
+      {
+        "command": "bricklab.showHint",
+        "title": "BrickLab: Show Live Hint",
+        "category": "BrickLab"
       }
+
     ],
     "menus": {
       "editor/title": [
-        {
-          "when": "resourceExtname == .lua",
-          "command": "bricklab.runLuaFile",
-          "group": "navigation"
-        },
-        {
-          "when": "!bricklab.connected",
-          "command": "bricklab.connect",
-          "group": "navigation"
-        },
-        {
-          "command": "bricklab.createProject",
-          "group": "navigation"
-        },
-        {
-          "when": "bricklab.connected",
-          "command": "bricklab.disconnect",
-          "group": "navigation"
-        },
-        {
-          "command": "bricklab.getDevices",
-          "group": "navigation"
-        }
+      {
+        "when": "resourceExtname == .lua",
+        "command": "bricklab.runLuaFile",
+        "group": "navigation"
+      },
+      {
+        "when": "!bricklab.connected",
+        "command": "bricklab.connect",
+        "group": "navigation"
+      },
+      {
+        "command": "bricklab.createProject",
+        "group": "navigation"
+      },
+      {
+        "when": "bricklab.connected",
+        "command": "bricklab.disconnect",
+        "group": "navigation"
+      },
+      {
+        "when": "bricklab.connected",
+        "command": "bricklab.getDevices",
+        "group": "navigation"
+      }
       ],
       "commandPalette": [
         {

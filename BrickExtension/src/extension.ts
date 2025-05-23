@@ -1,12 +1,13 @@
-// BrickExtension/src/extension.ts - Adapted to remove chunking
-
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { validateLuaCode, getLuaCodeInfo } from './luaStringConverter'; // Updated import
+import { validateLuaCode, getLuaCodeInfo } from './luaStringConverter';
 import { bleService, formatUuid } from './bleService';
 import { getDeviceTypeName, formatUuidForDisplay } from './brickBleApi';
 import { DeviceSidebarPanel } from './panels/DeviceSidebarPanel';
+import { TutorialSidebarPanel } from './panels/TutorialSidebarPanel';
+import { showLiveHint } from './utils/liveHints';
+
 
 
 function refreshEditorUI() {
@@ -19,9 +20,9 @@ function refreshEditorUI() {
 
 export function activate(context: vscode.ExtensionContext) {
     DeviceSidebarPanel.register(context);
+    TutorialSidebarPanel.register(context);
     console.log('BrickLab extension is now active!');
 
-    // Create new project command
     let createProjectCmd = vscode.commands.registerCommand('bricklab.createProject', async () => {
         const projectName = await vscode.window.showInputBox({
             prompt: 'Enter BrickLab Project Name'
@@ -41,7 +42,6 @@ export function activate(context: vscode.ExtensionContext) {
         const rootPath = workspaceFolders[0].uri.fsPath;
         const projectPath = path.join(rootPath, projectName);
 
-        // Create folder and files
         fs.mkdirSync(projectPath, { recursive: true });
         fs.writeFileSync(path.join(projectPath, 'project.brick'), `# BrickLab Project: ${projectName}\n`);
         fs.writeFileSync(path.join(projectPath, 'main.lua'),
@@ -50,12 +50,10 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.showInformationMessage(`BrickLab project "${projectName}" created.`);
     });
 
-    // Debug Bluetooth API
     let debugBluetoothCmd = vscode.commands.registerCommand('bricklab.debugBluetooth', async () => {
         try {
             vscode.window.showInformationMessage('Debugging Bluetooth API... Check console for details.');
 
-            // Test Bluetooth functionality
             const testResult = await bleService.testBluetooth();
             console.log('Bluetooth test result:', testResult);
 
@@ -69,10 +67,9 @@ export function activate(context: vscode.ExtensionContext) {
         refreshEditorUI();
     });
 
-    // Scan for BrickLab devices
     let scanDevicesCmd = vscode.commands.registerCommand('bricklab.scanDevices', async () => {
         try {
-            // Check if Bluetooth is available
+
             try {
                 const adapters = await bleService.getAdapters();
                 if (adapters.length === 0) {
@@ -94,7 +91,6 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            // Show found devices for selection
             const deviceItems = deviceAddresses.map(address => ({
                 label: address,
                 description: 'BrickLab ESP32 Device',
@@ -124,10 +120,9 @@ export function activate(context: vscode.ExtensionContext) {
         refreshEditorUI();
     });
 
-    // Connect to BrickLab device
     let connectCmd = vscode.commands.registerCommand('bricklab.connect', async () => {
         try {
-            // If not connected, offer to scan first
+
             if (!bleService.connected) {
                 const choice = await vscode.window.showQuickPick(
                     ['Scan for devices', 'Connect to last device'],
@@ -144,7 +139,7 @@ export function activate(context: vscode.ExtensionContext) {
 
             vscode.window.showInformationMessage('Connecting to BrickLab device...');
 
-            const connected = await bleService.connect(); // Will auto-scan if no address
+            const connected = await bleService.connect(); 
 
             if (connected) {
                 vscode.window.showInformationMessage('✓ Connected to BrickLab ESP32!');
@@ -158,8 +153,8 @@ export function activate(context: vscode.ExtensionContext) {
                         `Found ${deviceCount} devices (${onlineCount} online)`
                     );
 
-                    // 👇 Refresh sidebar after device list is loaded
                     DeviceSidebarPanel.refresh();
+                    vscode.commands.executeCommand('workbench.action.reloadWindow');
 
                 } catch (error) {
                     console.error('Failed to get device list:', error);
@@ -170,18 +165,16 @@ export function activate(context: vscode.ExtensionContext) {
         } catch (error) {
             vscode.window.showErrorMessage(`Connection error: ${error}`);
         }
-        refreshEditorUI();
+        vscode.commands.executeCommand('workbench.action.reloadWindow');
     });
 
 
-    // Disconnect from device
     let disconnectCmd = vscode.commands.registerCommand('bricklab.disconnect', async () => {
         await bleService.disconnect();
         vscode.window.showInformationMessage('Disconnected from BrickLab device');
         refreshEditorUI();
     });
 
-    // Run Lua file with options (adapted to remove chunking)
     let runLuaCmd = vscode.commands.registerCommand('bricklab.runLuaFile', async () => {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
@@ -208,7 +201,6 @@ export function activate(context: vscode.ExtensionContext) {
             }
         }
 
-        // Show run options (simplified - removed chunking options)
         const options = ['Run on Device', 'Show Code Info', 'Validate Code'];
         const choice = await vscode.window.showQuickPick(options, {
             placeHolder: 'Choose how to run the Lua code'
@@ -230,7 +222,6 @@ export function activate(context: vscode.ExtensionContext) {
         refreshEditorUI();
     });
 
-    // Get device list
     let getDevicesCmd = vscode.commands.registerCommand('bricklab.getDevices', async () => {
         if (!bleService.connected) {
             vscode.window.showErrorMessage('Not connected to BrickLab device');
@@ -241,7 +232,6 @@ export function activate(context: vscode.ExtensionContext) {
             vscode.window.showInformationMessage('Getting device list...');
             const devices = await bleService.refreshDeviceList();
 
-            // Show devices in a quick pick
             const deviceItems = devices.map(device => ({
                 label: formatUuidForDisplay(device.uuid),
                 description: `${getDeviceTypeName(device.deviceType)} • I2C: 0x${device.i2cAddress.toString(16).padStart(2, '0')}`,
@@ -452,6 +442,20 @@ export function activate(context: vscode.ExtensionContext) {
         refreshEditorUI();
     });
 
+    let showHintCmd = vscode.commands.registerCommand('bricklab.showHint', () => {
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+        showLiveHint(
+            'Click the BrickLab icon in the sidebar and press Connect.',
+            editor.document.uri,
+            0 // Hint at the top line
+        );
+    } else {
+        vscode.window.showWarningMessage('Open a Lua file to see live hints.');
+    }
+    });
+
+
     // Register all commands
     context.subscriptions.push(
         createProjectCmd,
@@ -463,7 +467,8 @@ export function activate(context: vscode.ExtensionContext) {
         getDevicesCmd,
         scanUnknownDevicesCmd,
         autoTestUnknownCmd,
-        manualDeviceTestCmd
+        manualDeviceTestCmd,
+        showHintCmd
     );
 
     // Show connection status in status bar
