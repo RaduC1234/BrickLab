@@ -1,35 +1,188 @@
 {
   "name": "bricklab-extension",
   "displayName": "BrickLab",
-  "description": "Extension for BrickLab IoT projects",
+  "description": "Extension for BrickLab IoT projects with BLE connectivity",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.70.0"
   },
+  "categories": ["Other"],
   "activationEvents": [
     "onCommand:bricklab.createProject",
-    "onCommand:bricklab.runLuaFile"
+    "onCommand:bricklab.runLuaFile",
+    "onCommand:bricklab.connect",
+    "onCommand:bricklab.disconnect",
+    "onCommand:bricklab.getDevices",
+    "onCommand:bricklab.scanDevices",
+    "onCommand:bricklab.debugBluetooth",
+    "onCommand:bricklab.scanUnknownDevices",
+    "onCommand:bricklab.autoTestUnknown",
+    "onCommand:bricklab.manualDeviceTest"
   ],
   "main": "./out/extension.js",
   "contributes": {
+      "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "bricklab-sidebar",
+          "title": "BrickLab",
+          "icon": "resources/BrickLab.png"
+        }
+      ]
+    },
+    "views": {
+      "bricklab-sidebar": [
+        {
+          "type": "webview",
+          "id": "bricklab.devices",
+          "name": "Connected Devices"
+        },
+        {
+          "type": "webview",
+          "id": "bricklab.tutorial",
+          "name": "Tutorial"
+        }
+      ]
+    },
+
     "commands": [
       {
         "command": "bricklab.createProject",
-        "title": "BrickLab: Create New Project"
+        "title": "BrickLab: Create New Project",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "bricklab.debugBluetooth",
+        "title": "BrickLab: Debug Bluetooth API",
+        "icon": "$(debug)"
+      },
+      {
+        "command": "bricklab.scanDevices",
+        "title": "BrickLab: Scan for Devices",
+        "icon": "$(search)"
+      },
+      {
+        "command": "bricklab.connect",
+        "title": "BrickLab: Connect to Device",
+        "icon": "$(debug-console)"
+      },
+      {
+        "command": "bricklab.disconnect", 
+        "title": "BrickLab: Disconnect Device",
+        "icon": "$(debug-disconnect)"
       },
       {
         "command": "bricklab.runLuaFile",
-        "title": "BrickLab: Run Active Lua File"
+        "title": "BrickLab: Run Active Lua File",
+        "icon": "$(play)"
+      },
+      {
+        "command": "bricklab.getDevices",
+        "title": "BrickLab: Get Device List",
+        "icon": "$(device-desktop)"
+      },
+      {
+        "command": "bricklab.scanUnknownDevices",
+        "title": "BrickLab: Scan Unknown Devices",
+        "icon": "$(question)"
+      },
+      {
+        "command": "bricklab.autoTestUnknown",
+        "title": "BrickLab: Auto Test Unknown Devices",
+        "icon": "$(robot)"
+      },
+      {
+        "command": "bricklab.manualDeviceTest",
+        "title": "BrickLab: Manual Device Test",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "bricklab.showHint",
+        "title": "BrickLab: Show Live Hint",
+        "category": "BrickLab"
+      }
+
+    ],
+    "menus": {
+      "editor/title": [
+      {
+        "when": "resourceExtname == .lua",
+        "command": "bricklab.runLuaFile",
+        "group": "navigation"
+      },
+      {
+        "when": "!bricklab.connected",
+        "command": "bricklab.connect",
+        "group": "navigation"
+      },
+      {
+        "command": "bricklab.createProject",
+        "group": "navigation"
+      },
+      {
+        "when": "bricklab.connected",
+        "command": "bricklab.disconnect",
+        "group": "navigation"
+      },
+      {
+        "when": "bricklab.connected",
+        "command": "bricklab.getDevices",
+        "group": "navigation"
+      }
+      ],
+      "commandPalette": [
+        {
+          "command": "bricklab.createProject"
+        },
+        {
+          "command": "bricklab.debugBluetooth"
+        },
+        {
+          "command": "bricklab.scanDevices"
+        },
+        {
+          "command": "bricklab.connect"
+        },
+        {
+          "command": "bricklab.disconnect"
+        },
+        {
+          "command": "bricklab.runLuaFile"
+        },
+        {
+          "command": "bricklab.getDevices"
+        },
+        {
+          "command": "bricklab.scanUnknownDevices"
+        },
+        {
+          "command": "bricklab.autoTestUnknown"
+        },
+        {
+          "command": "bricklab.manualDeviceTest"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "bricklab.runLuaFile",
+        "key": "ctrl+shift+r",
+        "mac": "cmd+shift+r",
+        "when": "resourceExtname == .lua"
       }
     ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./"
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "dependencies": {
+    "@abandonware/noble": "^1.9.2-15"
   },
   "devDependencies": {
-    "typescript": "^4.0.0",
-    "@types/node": "^14.0.0",
-    "@types/vscode": "^1.70.0"
+    "@types/vscode": "^1.70.0",
+    "@types/node": "^18.0.0",
+    "typescript": "^5.0.0"
   }
 }
