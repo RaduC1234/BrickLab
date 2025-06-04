@@ -1,0 +1,292 @@
+Version 4.0 HI-TECH Software Intermediate Code
+"79 ./brick_i2c_api.h
+[; ;./brick_i2c_api.h: 79: typedef struct __attribute__((packed)) {
+[s S1 `uc -> 2 `i `uc -> 2 `i `uc -> 4 `i `uc -> 8 `i ]
+[n S1 . prefix device_type reserved unique_id ]
+"90
+[; ;./brick_i2c_api.h: 90: typedef union {
+[u S2 `S1 1 `uc -> 16 `i ]
+[n S2 . raw bytes ]
+"10 brick_i2c_api.c
+[; ;brick_i2c_api.c: 10: brick_device_t brick_get_device_specs_from_uuid(const uint8_t *uuid_bytes) {
+[c E50 4096 4097 4112 8192 8193 8194 12288 12289 .. ]
+[n E50 . LED_SINGLE LED_DOUBLE LED_RGB MOTOR_SERVO_180 MOTOR_SERVO_360 MOTOR_STEPPER SENSOR_COLOR SENSOR_DISTANCE  ]
+"102 ./brick_i2c_api.h
+[; ;./brick_i2c_api.h: 102: typedef struct {
+[s S3 `uc 1 ]
+[n S3 . is_on ]
+"109
+[; ;./brick_i2c_api.h: 109: typedef struct {
+[s S4 `uc 1 `uc 1 ]
+[n S4 . is_on_1 is_on_2 ]
+"117
+[; ;./brick_i2c_api.h: 117: typedef struct {
+[s S5 `uc 1 `uc 1 `uc 1 ]
+[n S5 . red blue green ]
+"123
+[; ;./brick_i2c_api.h: 123: typedef struct {
+[s S6 `uc 1 ]
+[n S6 . angle ]
+"127
+[; ;./brick_i2c_api.h: 127: typedef struct {
+[s S7 `uc 1 ]
+[n S7 . instr ]
+"135
+[; ;./brick_i2c_api.h: 135: typedef union {
+[u S8 `S3 1 `S4 1 `S5 1 `S6 1 `S7 1 ]
+[n S8 . led_single led_double led_rgb servo_180 stepper_motor ]
+"151
+[; ;./brick_i2c_api.h: 151: typedef struct {
+[s S9 `S2 1 `E50 1 `uc 1 `S8 1 `uc 1 ]
+[n S9 . uuid device_type i2c_address impl online ]
+"27 C:\Program Files\Microchip\pic\include\c99/string.h
+[; ;C:\Program Files\Microchip\pic\include\c99/string.h: 27: void *memcpy (void *restrict, const void *restrict, size_t);
+[v _memcpy `(*v ~T0 @X0 0 ef3`*v`*Cv`ui ]
+"184 ./brick_i2c_api.h
+[; ;./brick_i2c_api.h: 184: uint8_t brick_uuid_get_i2c_address(const brick_uuid_t *uuid);
+[v _brick_uuid_get_i2c_address `(uc ~T0 @X0 0 ef1`*CS2 ]
+"117 C:\Program Files\Microchip\pic\include\c99/stdio.h
+[; ;C:\Program Files\Microchip\pic\include\c99/stdio.h: 117: int printf(const char *restrict, ...);
+[v _printf `(i ~T0 @X0 0 ev`*Cuc ]
+"10 brick_i2c_api.c
+[; ;brick_i2c_api.c: 10: brick_device_t brick_get_device_specs_from_uuid(const uint8_t *uuid_bytes) {
+[v _brick_get_device_specs_from_uuid `(S9 ~T0 @X0 1 ef1`*Cuc ]
+{
+[e :U _brick_get_device_specs_from_uuid ]
+[v _uuid_bytes `*Cuc ~T0 @X0 1 r1 ]
+[f ]
+[v F607 `S9 ~T0 @X0 1 s ]
+[i F607
+:U ..
+:U ..
+:U 0
+:U ..
+:U ..
+:U ..
+:U ..
+"11
+[; ;brick_i2c_api.c: 11:     brick_device_t device = {0};
+-> -> 0 `i `uc
+..
+..
+..
+..
+..
+..
+..
+]
+[v _device `S9 ~T0 @X0 1 a ]
+[e = _device F607 ]
+"13
+[; ;brick_i2c_api.c: 13:     if (!uuid_bytes) return device;
+[e $ ! ! != _uuid_bytes -> -> 0 `i `*Cuc 15  ]
+[e ) _device ]
+[e $UE 14  ]
+[e :U 15 ]
+"15
+[; ;brick_i2c_api.c: 15:     memcpy(device.uuid.bytes, uuid_bytes, 16);
+[e ( _memcpy (3 , , -> &U . . _device 0 1 `*v -> _uuid_bytes `*Cv -> -> 16 `i `ui ]
+"17
+[; ;brick_i2c_api.c: 17:     uint16_t type = (uuid_bytes[2] << 8) | uuid_bytes[3];
+[v _type `us ~T0 @X0 1 a ]
+[e = _type -> | << -> *U + _uuid_bytes * -> -> 2 `i `x -> -> # *U _uuid_bytes `i `x `i -> 8 `i -> *U + _uuid_bytes * -> -> 3 `i `x -> -> # *U _uuid_bytes `i `x `i `us ]
+"18
+[; ;brick_i2c_api.c: 18:     device.device_type = (brick_device_type_t) type;
+[e = . _device 1 -> _type `E50 ]
+"20
+[; ;brick_i2c_api.c: 20:     device.i2c_address = brick_uuid_get_i2c_address(&device.uuid);
+[e = . _device 2 ( _brick_uuid_get_i2c_address (1 -> &U . _device 0 `*CS2 ]
+"21
+[; ;brick_i2c_api.c: 21:     device.online = 0;
+[e = . _device 4 -> -> 0 `i `uc ]
+"23
+[; ;brick_i2c_api.c: 23:     return device;
+[e ) _device ]
+[e $UE 14  ]
+"24
+[; ;brick_i2c_api.c: 24: }
+[e :UE 14 ]
+}
+"26
+[; ;brick_i2c_api.c: 26: uint8_t brick_uuid_get_i2c_address(const brick_uuid_t *uuid) {
+[v _brick_uuid_get_i2c_address `(uc ~T0 @X0 1 ef1`*CS2 ]
+{
+[e :U _brick_uuid_get_i2c_address ]
+[v _uuid `*CS2 ~T0 @X0 1 r1 ]
+[f ]
+"27
+[; ;brick_i2c_api.c: 27:     if (!uuid)
+[e $ ! ! != _uuid -> -> 0 `i `*CS2 17  ]
+"28
+[; ;brick_i2c_api.c: 28:         return 0x00;
+[e ) -> -> 0 `i `uc ]
+[e $UE 16  ]
+[e :U 17 ]
+"30
+[; ;brick_i2c_api.c: 30:     const uint8_t raw = uuid->raw.unique_id[0];
+[v _raw `Cuc ~T0 @X0 1 a ]
+[e = _raw *U + &U . . *U _uuid 0 3 * -> -> -> 0 `i `ui `ux -> -> # *U &U . . *U _uuid 0 3 `ui `ux ]
+"31
+[; ;brick_i2c_api.c: 31:     return 0x08 + raw % (0x78 - 0x08);
+[e ) -> + -> 8 `i % -> _raw `i - -> 120 `i -> 8 `i `uc ]
+[e $UE 16  ]
+"32
+[; ;brick_i2c_api.c: 32: }
+[e :UE 16 ]
+}
+"34
+[; ;brick_i2c_api.c: 34: _Bool brick_uuid_valid(const uint8_t *uuid) {
+[v _brick_uuid_valid `(a ~T0 @X0 1 ef1`*Cuc ]
+{
+[e :U _brick_uuid_valid ]
+[v _uuid `*Cuc ~T0 @X0 1 r1 ]
+[f ]
+"35
+[; ;brick_i2c_api.c: 35:     return uuid && uuid[0] == 'B' && uuid[1] == 'L';
+[e ) -> -> && && != _uuid -> -> 0 `i `*Cuc == -> *U + _uuid * -> -> 0 `i `x -> -> # *U _uuid `i `x `ui -> 66 `ui == -> *U + _uuid * -> -> 1 `i `x -> -> # *U _uuid `i `x `ui -> 76 `ui `i `a ]
+[e $UE 18  ]
+"36
+[; ;brick_i2c_api.c: 36: }
+[e :UE 18 ]
+}
+"38
+[; ;brick_i2c_api.c: 38: void brick_print_uuid(const brick_uuid_t *uuid) {
+[v _brick_print_uuid `(v ~T0 @X0 1 ef1`*CS2 ]
+{
+[e :U _brick_print_uuid ]
+[v _uuid `*CS2 ~T0 @X0 1 r1 ]
+[f ]
+"39
+[; ;brick_i2c_api.c: 39:     printf("UUID: ");
+[e ( _printf :s 1C ]
+"40
+[; ;brick_i2c_api.c: 40:     for (int i = 0; i < 16; ++i)
+{
+[v _i `i ~T0 @X0 1 a ]
+[e = _i -> 0 `i ]
+[e $ < _i -> 16 `i 20  ]
+[e $U 21  ]
+[e :U 20 ]
+"41
+[; ;brick_i2c_api.c: 41:         printf("%02X ", uuid->bytes[i]);
+[e ( _printf , (. :s 2C -> *U + &U . *U _uuid 1 * -> -> _i `ui `ux -> -> # *U &U . *U _uuid 1 `ui `ux `i ]
+[e =+ _i -> 1 `i ]
+[e $ < _i -> 16 `i 20  ]
+[e :U 21 ]
+}
+"42
+[; ;brick_i2c_api.c: 42:     printf("\n");
+[e ( _printf :s 3C ]
+"43
+[; ;brick_i2c_api.c: 43: }
+[e :UE 19 ]
+}
+"45
+[; ;brick_i2c_api.c: 45: const char *brick_device_type_str(brick_device_type_t type) {
+[v _brick_device_type_str `(*Cuc ~T0 @X0 1 ef1`E50 ]
+{
+[e :U _brick_device_type_str ]
+[v _type `E50 ~T0 @X0 1 r1 ]
+[f ]
+"46
+[; ;brick_i2c_api.c: 46:     switch (type) {
+[e $U 25  ]
+{
+"47
+[; ;brick_i2c_api.c: 47:         case LED_SINGLE: return "LED_SINGLE";
+[e :U 26 ]
+[e ) :s 4C ]
+[e $UE 23  ]
+"48
+[; ;brick_i2c_api.c: 48:         case LED_DOUBLE: return "LED_DOUBLE";
+[e :U 27 ]
+[e ) :s 5C ]
+[e $UE 23  ]
+"49
+[; ;brick_i2c_api.c: 49:         case LED_RGB: return "LED_RGB";
+[e :U 28 ]
+[e ) :s 6C ]
+[e $UE 23  ]
+"50
+[; ;brick_i2c_api.c: 50:         case MOTOR_SERVO_180: return "MOTOR_SERVO_180";
+[e :U 29 ]
+[e ) :s 7C ]
+[e $UE 23  ]
+"51
+[; ;brick_i2c_api.c: 51:         case MOTOR_SERVO_360: return "MOTOR_SERVO_360";
+[e :U 30 ]
+[e ) :s 8C ]
+[e $UE 23  ]
+"52
+[; ;brick_i2c_api.c: 52:         case MOTOR_STEPPER: return "MOTOR_STEPPER";
+[e :U 31 ]
+[e ) :s 9C ]
+[e $UE 23  ]
+"53
+[; ;brick_i2c_api.c: 53:         case SENSOR_COLOR: return "SENSOR_COLOR";
+[e :U 32 ]
+[e ) :s 10C ]
+[e $UE 23  ]
+"54
+[; ;brick_i2c_api.c: 54:         case SENSOR_DISTANCE: return "SENSOR_DISTANCE";
+[e :U 33 ]
+[e ) :s 11C ]
+[e $UE 23  ]
+"55
+[; ;brick_i2c_api.c: 55:         default: return "UNKNOWN";
+[e :U 34 ]
+[e ) :s 12C ]
+[e $UE 23  ]
+"56
+[; ;brick_i2c_api.c: 56:     }
+}
+[e $U 24  ]
+[e :U 25 ]
+[e [\ -> _type `ui , $ -> . `E50 0 `ui 26
+ , $ -> . `E50 1 `ui 27
+ , $ -> . `E50 2 `ui 28
+ , $ -> . `E50 3 `ui 29
+ , $ -> . `E50 4 `ui 30
+ , $ -> . `E50 5 `ui 31
+ , $ -> . `E50 6 `ui 32
+ , $ -> . `E50 7 `ui 33
+ 34 ]
+[e :U 24 ]
+"57
+[; ;brick_i2c_api.c: 57: }
+[e :UE 23 ]
+}
+"59
+[; ;brick_i2c_api.c: 59: void brick_load_and_run(const char *program_source) {
+[v _brick_load_and_run `(v ~T0 @X0 1 ef1`*Cuc ]
+{
+[e :U _brick_load_and_run ]
+[v _program_source `*Cuc ~T0 @X0 1 r1 ]
+[f ]
+"60
+[; ;brick_i2c_api.c: 60: }
+[e :UE 35 ]
+}
+"62
+[; ;brick_i2c_api.c: 62: void brick_get_host_modules(void) {
+[v _brick_get_host_modules `(v ~T0 @X0 1 ef ]
+{
+[e :U _brick_get_host_modules ]
+[f ]
+"63
+[; ;brick_i2c_api.c: 63: }
+[e :UE 36 ]
+}
+[p f _printf 10518532 ]
+[a 10C 83 69 78 83 79 82 95 67 79 76 79 82 0 ]
+[a 9C 77 79 84 79 82 95 83 84 69 80 80 69 82 0 ]
+[a 12C 85 78 75 78 79 87 78 0 ]
+[a 4C 76 69 68 95 83 73 78 71 76 69 0 ]
+[a 5C 76 69 68 95 68 79 85 66 76 69 0 ]
+[a 11C 83 69 78 83 79 82 95 68 73 83 84 65 78 67 69 0 ]
+[a 6C 76 69 68 95 82 71 66 0 ]
+[a 7C 77 79 84 79 82 95 83 69 82 86 79 95 49 56 48 0 ]
+[a 8C 77 79 84 79 82 95 83 69 82 86 79 95 51 54 48 0 ]
+[a 2C 37 48 50 88 32 0 ]
+[a 1C 85 85 73 68 58 32 0 ]
+[a 3C 10 0 ]

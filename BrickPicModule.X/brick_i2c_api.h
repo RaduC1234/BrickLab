@@ -1,9 +1,9 @@
 /**
  * @file brick_i2c_api.h
- * @brief Public API for BrickLab IÂ²C device definitions and access.
+ * @brief Public API for BrickLab I²C device definitions and access.
  *
  * This file declares the types, enums, and utility functions used to
- * interact with BrickLab hardware devices over the IÂ²C bus.
+ * interact with BrickLab hardware devices over the I²C bus.
  */
 
 #ifndef BRICK_I2C_API_H
@@ -22,7 +22,7 @@ extern "C" {
 
 /**
  * @enum brick_command_type_t
- * @brief Supported commands that can be sent to devices via IÂ²C.
+ * @brief Supported commands that can be sent to devices via I²C.
  *
  * These correspond to the types of control or data request operations available.
  * @note Must be mapped to the Lua environment manually if needed.
@@ -124,9 +124,9 @@ typedef struct {
     uint8_t angle;
 } brick_device_servo_180_impl_t;
 
-    typedef struct {
-        uint8_t motor;
-    }brick_device_stepper_motor_impl_t;
+typedef struct {
+    uint8_t instr; // 0, 0, 0, 0, S1, S2, S3, STEP
+} brick_device_stepper_motor_impl_t;
 
 /**
  * @union brick_device_impl_t
@@ -146,12 +146,12 @@ typedef union {
 
 /**
  * @struct brick_device_t
- * @brief Representation of a discovered device on the IÂ²C bus.
+ * @brief Representation of a discovered device on the I²C bus.
  */
 typedef struct {
     brick_uuid_t uuid; /**< Unique device UUID */
     brick_device_type_t device_type; /**< Device type */
-    uint8_t i2c_address; /**< 7-bit IÂ²C address */
+    uint8_t i2c_address; /**< 7-bit I²C address */
     brick_device_impl_t impl; /**< Device-specific data/state */
     uint8_t online; /**< 1 = online, 0 = offline */
 } brick_device_t;
@@ -177,9 +177,9 @@ typedef struct {
 brick_device_t brick_get_device_specs_from_uuid(const uint8_t *uuid);
 
 /**
- * @brief Calculates a valid IÂ²C address from the UUID.
+ * @brief Calculates a valid I²C address from the UUID.
  * @param uuid Pointer to the UUID.
- * @return 7-bit IÂ²C address.
+ * @return 7-bit I²C address.
  */
 uint8_t brick_uuid_get_i2c_address(const brick_uuid_t *uuid);
 

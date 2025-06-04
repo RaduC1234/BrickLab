@@ -4,6 +4,8 @@
 #include <brick_i2c_host.hpp>
 #include <freertos/FreeRTOS.h>
 
+#include <esp_log.h>
+
 lua_State *vm_state = nullptr;
 std::function<const char*()> on_vm_exception_callback = nullptr;
 
@@ -15,18 +17,26 @@ int brick_lua_vm_delay(lua_State *L) {
 
 int brick_lua_vm_send_command(lua_State *vm_state) {
     const char *uuid_str = luaL_checkstring(vm_state, 1);
-
     int cmd_type = luaL_checkinteger(vm_state, 2);
-
     luaL_checktype(vm_state, 3, LUA_TTABLE);
 
-    // Convert UUID string to brick_uuid_t
+    // --- Validate UUID string length ---
+    if (!uuid_str || strlen(uuid_str) != 36) {
+        return luaL_error(vm_state, "UUID must be exactly 36 characters long");
+    }
+
+    // --- Convert UUID string to brick_uuid_t safely ---
     brick_uuid_t uuid;
     int byte_index = 0;
+
     for (int i = 0; i < 36 && byte_index < 16;) {
         if (uuid_str[i] == '-') {
             i++;
             continue;
+        }
+
+        if (i + 1 >= 36) {
+            return luaL_error(vm_state, "Malformed UUID string: unexpected end at position %d", i);
         }
 
         auto hex_char_to_int = [](char c) -> int {
@@ -38,39 +48,49 @@ int brick_lua_vm_send_command(lua_State *vm_state) {
 
         int high = hex_char_to_int(uuid_str[i]);
         int low = hex_char_to_int(uuid_str[i + 1]);
+
         if (high < 0 || low < 0) {
-            return luaL_error(vm_state, "Invalid UUID string");
+            return luaL_error(vm_state, "Malformed UUID string: non-hex characters at position %d", i);
         }
 
         uuid.bytes[byte_index++] = static_cast<uint8_t>((high << 4) | low);
         i += 2;
     }
 
-    if (byte_index != 16) return luaL_error(vm_state, "Incomplete UUID");
+    if (byte_index != 16) {
+        return luaL_error(vm_state, "Incomplete UUID: expected 16 bytes, got %d", byte_index);
+    }
 
+    // --- Lookup device by UUID ---
     brick_device_t *dev = brick_i2c_get_device_uuid(uuid);
-    if (!dev) return luaL_error(vm_state, "Device not found");
+    if (!dev) return luaL_error(vm_state, "Device not found for given UUID");
 
+    // --- Handle supported command ---
     if (cmd_type == CMD_LED_RGB && dev->device_type == LED_RGB) {
         lua_getfield(vm_state, 3, "red");
         lua_getfield(vm_state, 3, "green");
         lua_getfield(vm_state, 3, "blue");
 
-        dev->impl.led_rgb.red = luaL_checkinteger(vm_state, -3);
-        dev->impl.led_rgb.green = luaL_checkinteger(vm_state, -2);
-        dev->impl.led_rgb.blue = luaL_checkinteger(vm_state, -1);
+        if (!lua_isinteger(vm_state, -3) || !lua_isinteger(vm_state, -2) || !lua_isinteger(vm_state, -1)) {
+            lua_pop(vm_state, 3);
+            return luaL_error(vm_state, "RGB values must be integers");
+        }
+
+        dev->impl.led_rgb.red = lua_tointeger(vm_state, -3);
+        dev->impl.led_rgb.green = lua_tointeger(vm_state, -2);
+        dev->impl.led_rgb.blue = lua_tointeger(vm_state, -1);
         lua_pop(vm_state, 3);
     } else {
         return luaL_error(vm_state, "Unsupported command or mismatched device type");
     }
 
+    // --- Create and send command ---
     const brick_command_t cmd = {
         .command = static_cast<brick_command_type_t>(cmd_type),
         .device = dev
     };
 
     brick_i2c_send_device_command(&cmd);
-
     return 0;
 }
 
@@ -182,6 +202,8 @@ void brick_lua_vm_reset() {
 const char *brick_lua_vm_run(const char *code) {
     brick_lua_vm_reset();
     assert(vm_state && "Lua VM not initialized");
+
+    printf("Lua code:\n%s\n", code);
 
     // Load the Lua code
     if (luaL_loadstring(vm_state, code) != LUA_OK) {
